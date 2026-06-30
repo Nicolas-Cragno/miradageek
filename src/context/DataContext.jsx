@@ -5,6 +5,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 const DataContext = createContext();
 
 const colecciones = [
+  // elementos
   "usuarios",
   "roles",
   "sucursales",
@@ -13,6 +14,9 @@ const colecciones = [
   "productos",
   "proveedores",
   "tipos",
+  // eventos
+  "compras",
+  "detalleCompras",
 ];
 
 export function DataProvider({ children }) {

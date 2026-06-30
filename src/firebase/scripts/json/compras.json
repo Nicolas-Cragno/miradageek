@@ -1,0 +1,4 @@
+[
+    {"id" : "CP-A00000001", "sucursal" : "SC-A0001","proveedor" : "PV-A0001", "monto" : "0", "moneda" : "pesos", "datalle" : "Prueba"},
+    {"id" : "CP-A00000002", "sucursal" : "SC-A0001","proveedor" : "PV-A0001", "monto" : "0", "moneda" : "pesos", "datalle" : "Prueba"}
+]

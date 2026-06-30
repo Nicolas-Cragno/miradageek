@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { FiSearch as SearchLogo } from "react-icons/fi";
 import "./css/Tabla.css";
+import { formatearCampoFirestore } from "../../functions/DataFunctions";
 
 export default function Tabla({ data = [], campos = [], onSelect }) {
   const [busqueda, setBusqueda] = useState("");
@@ -45,7 +46,7 @@ export default function Tabla({ data = [], campos = [], onSelect }) {
           <thead>
             <tr>
               {camposTabla.map((campo) => (
-                <th key={campo.key}>{campo.label}</th>
+                <th key={campo.key}>{formatearCampoFirestore(campo.label)}</th>
               ))}
             </tr>
           </thead>
@@ -54,7 +55,9 @@ export default function Tabla({ data = [], campos = [], onSelect }) {
             {datosFiltrados.map((item, index) => (
               <tr key={item.id || index} onClick={() => onSelect?.(item)}>
                 {camposTabla.map((campo) => (
-                  <td key={campo.key}>{formatValue(item[campo.key])}</td>
+                  <td key={campo.key}>
+                    {formatValue(formatearCampoFirestore(item[campo.key]))}
+                  </td>
                 ))}
               </tr>
             ))}

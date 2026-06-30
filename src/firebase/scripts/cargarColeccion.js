@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../FirebaseConfig.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,9 +28,9 @@ try {
 
   for (const elemento of datos) {
     if (elemento.id) {
-      await setDoc(doc(db, nombreColeccion, elemento.id), elemento);
+      await setDoc(doc(db, nombreColeccion, elemento.id), { ...elemento, fecha: serverTimestamp() });
     } else {
-      await addDoc(collection(db, nombreColeccion), elemento);
+      await addDoc(collection(db, nombreColeccion), { ...elemento, fecha: serverTimestamp() });
     }
 
     console.log(`✔ ${elemento.id ?? "(id automático)"}`);

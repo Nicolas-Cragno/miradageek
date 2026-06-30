@@ -5,6 +5,7 @@ import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
 
 export default function Form({
+  children,
   open = false,
   item = null,
   campos = [],
@@ -15,6 +16,7 @@ export default function Form({
 }) {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [detalle, setDetalle] = useState([]);
 
   useEffect(() => {
     if (item) {
@@ -81,16 +83,11 @@ export default function Form({
                   campo={campo}
                   value={formData[campo.key]}
                   onChange={handleChange}
-                  optionsMap={{
-                    codigoArea: [
-                      { value: "11", label: "11 - CABA" },
-                      { value: "221", label: "221 - La Plata" },
-                    ],
-                  }}
                 />
               </div>
             ))}
           </div>
+          {children}
 
           <div className="form-buttons">
             <button type="button" className="btn-secondary" onClick={onClose}>

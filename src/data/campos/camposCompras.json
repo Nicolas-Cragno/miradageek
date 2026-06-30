@@ -1,0 +1,101 @@
+[
+  {
+    "key": "id",
+    "label": "Identificador",
+    "tabla": true,
+    "ficha": true,
+    "form": true,
+    "input": "disabled"
+  },
+  {
+    "key" : "label",
+    "label": "Compra",
+    "tabla": false,
+    "ficha": false,
+    "form": "true",
+    "input": "disabled"
+  },
+  {
+    "key": "fecha",
+    "label": "Fecha & Hora",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "datetime"
+  },
+  {
+    "key": "labelSucursal",
+    "label": "Sucursal",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "select",
+    "options": "sucursales",
+    "use": "database"
+  },
+  {
+    "key": "sucursal",
+    "label": "Sucursal",
+    "tabla": false,
+    "ficha": false,
+    "form": true,
+    "input": "select",
+    "options": "sucursales",
+    "use": "database"
+  },
+  {
+    "key": "labelProveedor",
+    "label": "Proveedor",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "select",
+    "options": "proveedores",
+    "use": "database"
+  },
+  {
+    "key": "proveedor",
+    "label": "Proveedor",
+    "tabla": false,
+    "ficha": false,
+    "form": true,
+    "input": "select",
+    "options": "proveedores",
+    "use": "database"
+  },
+  {
+    "key": "labelMonto",
+    "label": "Monto",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "number",
+    "use": "database"
+  },
+  {
+    "key": "monto",
+    "label": "Monto",
+    "tabla": false,
+    "ficha": false,
+    "form": true,
+    "input": "number",
+    "use": "database"
+  },
+  {
+    "key": "detalle",
+    "label": "Detalle",
+    "ficha": true,
+    "form": true,
+    "input": "textarea",
+    "use": "database"
+  },
+  {
+    "key": "labelEstado",
+    "label": "Estado",
+    "ficha": true,
+    "form": false,
+    "input": "select",
+    "options": "estados",
+    "use": "database"
+  }
+]

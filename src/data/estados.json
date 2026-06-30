@@ -1,0 +1,5 @@
+[
+  { "key": "pendiente", "label": "Pendiente" },
+  { "key": "cumplido", "label": "Cumplido"},
+  { "key": "cancelado", "label": "Cancelado" }
+]

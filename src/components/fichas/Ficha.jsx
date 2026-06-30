@@ -1,4 +1,5 @@
 import Logo from "../../assets/logos/Logo.png";
+import { formatearCampoFirestore } from "../../functions/DataFunctions";
 import TextButton from "../buttons/TextButton";
 import "./css/Ficha.css";
 
@@ -22,12 +23,12 @@ export default function Ficha({ item, campos = [], onEdit }) {
       <div className="detalle-grid">
         {camposFicha.map((campo) => (
           <div key={campo.key} className="detalle-item">
-            <strong>{campo.label}</strong>
+            <strong>{formatearCampoFirestore(campo.label)}</strong>
 
             <span>
               {typeof item[campo.key] === "object"
-                ? JSON.stringify(item[campo.key])
-                : String(item[campo.key] ?? "-")}
+                ? JSON.stringify(formatearCampoFirestore(item[campo.key]))
+                : String(formatearCampoFirestore(item[campo.key]) ?? "-")}
             </span>
           </div>
         ))}

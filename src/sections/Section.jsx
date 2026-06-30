@@ -13,6 +13,8 @@ export default function Section({
   campos = [],
   title = "",
   collection = "",
+  FormComponent = Form,
+  formProps = {},
 }) {
   const [selected, setSelected] = useState(null);
 
@@ -55,7 +57,7 @@ export default function Section({
         </div>
       </div>
 
-      <Form
+      <FormComponent
         open={formOpen}
         item={editingItem}
         campos={campos}
@@ -63,6 +65,7 @@ export default function Section({
         title={editingItem ? `Editar ${title}` : `Nuevo ${title}`}
         onClose={() => setFormOpen(false)}
         onSave={guardar}
+        {...formProps}
       />
     </>
   );

@@ -1,0 +1,8 @@
+[
+    {"id" : "DC-A0001","compra" : "CP-A00000001", "producto" : "PR-A00000079", "cantidad" : 1, "precio" : 15250, "moneda" : "pesos", "detalle": ""},
+    {"id" : "DC-A0002","compra" : "CP-A00000001", "producto" : "PR-A00000100", "cantidad" : 2, "precio" : 24542.25, "moneda" : "pesos", "detalle": ""},
+    {"id" : "DC-A0003","compra" : "CP-A00000001", "producto" : "PR-A00000075", "cantidad" : 1, "precio" : 5423, "moneda" : "pesos", "detalle": ""},
+    {"id" : "DC-A0004","compra" : "CP-A00000001", "producto" : "PR-A00000085", "cantidad" : 1, "precio" : 4564, "moneda" : "pesos", "detalle": ""},
+    {"id" : "DC-A0005","compra" : "CP-A00000002", "producto" : "PR-A00000102", "cantidad" : 1, "precio" : 2568, "moneda" : "pesos", "detalle": ""},
+    {"id" : "DC-A0006","compra" : "CP-A00000002", "producto" : "PR-A00000103", "cantidad" : 4, "precio" : 47, "moneda" : "dolares", "detalle": ""}
+]
