@@ -2,7 +2,8 @@ import { useData } from "../context/DataContext";
 import { useCompras } from "../context/ComprasContext";
 import Section from "./Section";
 import campos from "../data/campos/camposCompras.json";
-import FormEvent from "../components/formularios/FormEvent";
+import camposDetalle from "../data/campos/camposDetalleCompras.json";
+import FormCompra from "../components/formularios/FormCompra";
 
 export default function Compras() {
   const { compras } = useCompras();
@@ -13,10 +14,8 @@ export default function Compras() {
       campos={campos}
       title="Compras / Pedidos realizados"
       collection="compras"
-      FormComponent={FormEvent}
-      formProps={{
-        detalleCampos: camposDetalle,
-      }}
+      detailCollection={"detalleCompras"}
+      camposDetalle={camposDetalle}
     />
   );
 }

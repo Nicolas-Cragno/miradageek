@@ -1,0 +1,40 @@
+[
+  {
+    "key": "fecha",
+    "label": "Fecha & Hora",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "datetime"
+  },
+
+  {
+    "key": "labelProducto",
+    "label": "Producto",
+    "tabla": false,
+    "ficha": true,
+    "form": false,
+    "input": "select",
+    "options": "sucursales",
+    "use": "database"
+  },
+  {
+    "key": "producto",
+    "label": "Producto",
+    "tabla": false,
+    "ficha": false,
+    "form": true,
+    "input": "select",
+    "options": "productos",
+    "use": "database"
+  },
+  {
+    "key": "cantidad",
+    "label": "Cantidad",
+    "tabla": false,
+    "ficha": true,
+    "form": true,
+    "input": "number",
+    "use": "database"
+  }
+]

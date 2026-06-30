@@ -137,3 +137,34 @@ form {
 .btn-secondary:hover {
   background: var(--color-surface);
 }
+
+.detalle-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.detalle-content {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.detalle-field {
+  min-width: 120px;
+  flex: 1;
+}
+
+.detalle-delete {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}

@@ -85,10 +85,16 @@
     "key": "detalle",
     "label": "Detalle",
     "ficha": true,
-    "form": true,
+    "form": false,
     "input": "textarea",
     "use": "database"
   },
+  {
+  "key": "detalleCompras",
+  "label": "Items",
+  "ficha": true,
+  "type": "list"
+},
   {
     "key": "labelEstado",
     "label": "Estado",

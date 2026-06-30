@@ -25,3 +25,31 @@ export async function submit({
   onGuardar?.();
   onClose?.();
 }
+
+export async function submitMultiple({
+  mainCollection,
+  detailCollection,
+  mainData,
+  detailData = [],
+  onGuardar,
+  onClose,
+}) {
+  try {
+    const compraId = await agregar(mainCollection, mainData);
+
+    await Promise.all(
+      detailData.map((item) =>
+        agregar(detailCollection, {
+          ...item,
+          compra: compraId, // FK
+        })
+      )
+    );
+
+    onGuardar?.();
+    onClose?.();
+  } catch (error) {
+    console.error("[submitMultiple] Error:", error);
+    throw error;
+  }
+}

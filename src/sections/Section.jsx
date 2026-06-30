@@ -14,7 +14,8 @@ export default function Section({
   title = "",
   collection = "",
   FormComponent = Form,
-  formProps = {},
+  detailCollection = null,
+  camposDetalle = [],
 }) {
   const [selected, setSelected] = useState(null);
 
@@ -65,7 +66,9 @@ export default function Section({
         title={editingItem ? `Editar ${title}` : `Nuevo ${title}`}
         onClose={() => setFormOpen(false)}
         onSave={guardar}
-        {...formProps}
+        detailCollection={detailCollection}
+        camposDetalle={camposDetalle}
+        detalleKey={detailCollection}
       />
     </>
   );

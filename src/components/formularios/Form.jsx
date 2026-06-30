@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import "./css/Form.css";
-import { submit } from "../../functions/submits/Submits";
+import { submit, submitMultiple } from "../../functions/submits/Submits";
 import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
 
 export default function Form({
-  children,
   open = false,
   item = null,
   campos = [],
@@ -16,23 +15,23 @@ export default function Form({
 }) {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
-  const [detalle, setDetalle] = useState([]);
 
   useEffect(() => {
+    if (!open) return;
+
     if (item) {
       setFormData(item);
     } else {
-      const nuevo = {};
-
+      const init = {};
       campos
         .filter((c) => c.form)
         .forEach((c) => {
-          nuevo[c.key] = c.default ?? "";
+          init[c.key] = c.default ?? "";
         });
 
-      setFormData(nuevo);
+      setFormData(init);
     }
-  }, [item, campos]);
+  }, [item, campos, open]);
 
   if (!open) return null;
 
@@ -47,19 +46,26 @@ export default function Form({
 
   async function handleSubmit(e) {
     e.preventDefault();
-
     setSaving(true);
 
-    await submit({
-      collection,
-      formData,
-      campos,
-      idElemento: item?.id ?? null,
-      onGuardar: onSave,
-      onClose,
-    });
+    try {
+      const mainData = {};
 
-    setSaving(false);
+      camposForm.forEach((c) => {
+        mainData[c.key] = formData[c.key];
+      });
+
+      await submit({
+        collection,
+        formData: mainData,
+        campos,
+        idElemento: item?.id ?? null,
+        onGuardar: onSave,
+        onClose,
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (saving) return <Loading />;
@@ -68,8 +74,7 @@ export default function Form({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-form" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{title ?? (item ? "Editar registro" : "Nuevo registro")}</h2>
-
+          <h2>{title ?? (item ? "Editar" : "Nuevo")}</h2>
           <button className="modal-close" onClick={onClose}>
             ✕
           </button>
@@ -78,7 +83,7 @@ export default function Form({
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             {camposForm.map((campo) => (
-              <div className="form-group" key={campo.key}>
+              <div key={campo.key} className="form-group">
                 <InputForm
                   campo={campo}
                   value={formData[campo.key]}
@@ -87,16 +92,13 @@ export default function Form({
               </div>
             ))}
           </div>
-          {children}
 
           <div className="form-buttons">
-            <button type="button" className="btn-secondary" onClick={onClose}>
+            <button type="button" onClick={onClose}>
               Cancelar
             </button>
 
-            <button type="submit" className="btn-primary">
-              {item ? "Guardar cambios" : "Crear"}
-            </button>
+            <button type="submit">{item ? "Guardar" : "Crear"}</button>
           </div>
         </form>
       </div>

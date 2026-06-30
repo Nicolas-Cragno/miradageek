@@ -61,6 +61,34 @@ const configuracionIds = {
     longitud: 8,
     maximo: 99999999,
   },
+
+  compras: {
+    // CP-A00000001
+    prefijo: "CP-",
+    longitud: 8,
+    maximo: 99999999,
+  },
+
+  detalleCompras: {
+    // DC-A00000001
+    prefijo: "DC-",
+    longitud: 8,
+    maximo: 99999999,
+  },
+
+  ventas: {
+    // VT-A00000001
+    prefijo: "VT-",
+    longitud: 8,
+    maximo: 99999999,
+  },
+
+  detalleVentas: {
+    // DV-A00000001
+    prefijo: "DV-",
+    longitud: 8,
+    maximo: 99999999,
+  },
 };
 
 

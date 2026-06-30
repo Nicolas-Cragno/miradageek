@@ -21,18 +21,27 @@ export default function Ficha({ item, campos = [], onEdit }) {
       </div>
 
       <div className="detalle-grid">
-        {camposFicha.map((campo) => (
-          <div key={campo.key} className="detalle-item">
-            <strong>{formatearCampoFirestore(campo.label)}</strong>
+        {camposFicha.map((campo) => {
+          const valor = formatearCampoFirestore(item[campo.key]);
 
-            <span>
-              {typeof item[campo.key] === "object"
-                ? JSON.stringify(formatearCampoFirestore(item[campo.key]))
-                : String(formatearCampoFirestore(item[campo.key]) ?? "-")}
-            </span>
-          </div>
-        ))}
+          return (
+            <div key={campo.key} className="detalle-item">
+              <strong>{campo.label}</strong>
+
+              {Array.isArray(valor) ? (
+                <ul className="detalle-lista">
+                  {valor.map((v, i) => (
+                    <li key={i}>{v}</li>
+                  ))}
+                </ul>
+              ) : (
+                <span style={{ whiteSpace: "pre-line" }}>{valor}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
+
       <div className="ficha-toolbar">
         <TextButton text="Editar" onClick={onEdit} />
       </div>
