@@ -5,6 +5,8 @@ import Ficha from "../components/fichas/Ficha";
 import Form from "../components/formularios/Form";
 
 import "./css/Sections.css";
+import LogoButton from "../components/buttons/LogoButton";
+import TextButton from "../components/buttons/TextButton";
 
 export default function Section({
   data = [],
@@ -42,8 +44,7 @@ export default function Section({
         <div className="section-list">
           <div className="section-header">
             <h1>{title}</h1>
-
-            <button onClick={nuevo}>+ Nuevo</button>
+            <TextButton text={"+ Nuevo"} onClick={nuevo} />
           </div>
 
           <Tabla data={data} campos={campos} onSelect={setSelected} />

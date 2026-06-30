@@ -12,7 +12,7 @@
     "tabla": true,
     "ficha": true,
     "form": true,
-    "input": "texarea",
+    "input": "text",
     "use": "database"
   },
   {
@@ -49,7 +49,7 @@
     "ficha": false,
     "form": true,
     "input": "select",
-    "options": "tipoProducto",
+    "options": "tipos",
     "use": "database"
   },
   {

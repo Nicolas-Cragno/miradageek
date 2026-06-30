@@ -1,4 +1,5 @@
 import Logo from "../../assets/logos/Logo.png";
+import TextButton from "../buttons/TextButton";
 import "./css/Ficha.css";
 
 export default function Ficha({ item, campos = [], onEdit }) {
@@ -32,9 +33,7 @@ export default function Ficha({ item, campos = [], onEdit }) {
         ))}
       </div>
       <div className="ficha-toolbar">
-        <button className="btn-edit" onClick={onEdit}>
-          ✏️ Editar
-        </button>
+        <TextButton text="Editar" onClick={onEdit} />
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "./css/Form.css";
 import { submit } from "../../functions/submits/Submits";
+import InputForm from "../inputs/InputForm";
+import Loading from "../../routes/Loading";
 
 export default function Form({
   open = false,
@@ -12,6 +14,7 @@ export default function Form({
   onSave,
 }) {
   const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -43,6 +46,8 @@ export default function Form({
   async function handleSubmit(e) {
     e.preventDefault();
 
+    setSaving(true);
+
     await submit({
       collection,
       formData,
@@ -51,7 +56,11 @@ export default function Form({
       onGuardar: onSave,
       onClose,
     });
+
+    setSaving(false);
   }
+
+  if (saving) return <Loading />;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -68,12 +77,16 @@ export default function Form({
           <div className="form-grid">
             {camposForm.map((campo) => (
               <div className="form-group" key={campo.key}>
-                <label>{campo.label}</label>
-
-                <input
-                  type={campo.input || "text"}
-                  value={formData[campo.key] ?? ""}
-                  onChange={(e) => handleChange(campo.key, e.target.value)}
+                <InputForm
+                  campo={campo}
+                  value={formData[campo.key]}
+                  onChange={handleChange}
+                  optionsMap={{
+                    codigoArea: [
+                      { value: "11", label: "11 - CABA" },
+                      { value: "221", label: "221 - La Plata" },
+                    ],
+                  }}
                 />
               </div>
             ))}

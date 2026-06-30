@@ -1,6 +1,38 @@
 .tabla-container {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+.tabla-search {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: lef;
+  align-items: center;
+  gap: 5px;
+}
+
+.tabla-search input {
+  margin-left: 5px;
+  padding: 5px;
+  border-radius: 5px;
+  border-style: none;
+}
+
+
+.tabla-search-icon {
+  opacity: .6;
+}
+
+.tabla-scroll {
+  min-height: 80vh;
+  max-height: 80vh;
+  overflow-y: auto;
   overflow-x: auto;
+
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.08);
 }
 
 .tabla {
@@ -8,11 +40,13 @@
   border-collapse: collapse;
   background: var(--color-text);
   color: var(--color-back);
-  border-radius: 8px;
-  overflow: hidden;
 }
 
-.tabla thead {
+.tabla thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
   background: var(--color-light);
 }
 
@@ -20,8 +54,8 @@
 .tabla td {
   padding: 10px 12px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .tabla tbody tr:hover {

@@ -9,7 +9,9 @@ export default function Sidebar({ open, setOpen }) {
   return (
     <div className={`sidebar ${open ? "open" : "closed"}`}>
       <div className="sidebar-header">
-        <img src={Logo} alt="" className="logo" />
+        <NavLink to="/">
+          <img src={Logo} alt="" className="logo" />
+        </NavLink>
 
         <button className="toggle-btn" onClick={() => setOpen(!open)}>
           {open ? "⟨" : "⟩"}
@@ -17,19 +19,24 @@ export default function Sidebar({ open, setOpen }) {
       </div>
 
       <nav className="sidebar-nav">
-        <NavLink to="/productos" className="nav-item">
-          <BoxLogo className="nav-logo" />{" "}
-          <span className={`nav-text`}>Productos</span>
+        <NavLink
+          to="/productos"
+          className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+        >
+          <BoxLogo className="nav-icon" />
+          <span className={`nav-text ${!open ? "hidden" : ""}`}>Productos</span>
         </NavLink>
 
         <NavLink to="/clientes" className="nav-item">
           <CustomerLogo className="nav-logo" />{" "}
-          <span className={`nav-text`}>Clientes</span>
+          <span className={`nav-text ${!open ? "hidden" : ""}`}>Clientes</span>
         </NavLink>
 
         <NavLink to="/proveedores" className="nav-item">
           <ProviderLogo className="nav-logo" />{" "}
-          <span className={`nav-text`}>Proveedores</span>
+          <span className={`nav-text ${!open ? "hidden" : ""}`}>
+            Proveedores
+          </span>
         </NavLink>
       </nav>
     </div>

@@ -1,0 +1,215 @@
+/* alert button */
+
+.alert-btn {
+  background-color: var(--color-text);
+  color: var(--color-title);
+  border: 1px solid var(--color-title);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: bold;
+  margin-left: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  height: 40px; 
+  min-width: 200px; 
+}
+
+.btn-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /*transition: opacity 0.2s ease-in-out;*/
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+
+
+
+.close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.alert-btn:hover .visible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.alert-btn:hover{
+    background-color: transparent;
+    color: black;
+    border-color: black;
+}
+
+.alert-btn:hover .hidden {
+  opacity: 1;
+  pointer-events: auto;
+  
+}
+
+.btn-body {
+  background-color: var(--color-title);
+  color: var(--color-text);
+  border: none;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+
+.btn-std-body{
+  background-color: #fff;
+  font-weight: bolder;
+  max-width: 22vh;
+  min-width: 22vh;
+  max-height: 8vh;
+  min-height: 8vh;
+  color: #1f2937;
+  border: none;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  text-align: right;
+  padding-left: 30px;
+  padding-right: 0;
+  opacity: .5;
+  /* Fondo */
+  background-repeat: no-repeat;
+  background-size: 80px;
+  background-position: -20px center;
+}
+
+.btn-std-body:hover{
+  opacity: 1;
+}
+.doubleButton{
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+
+.btn-body-doble {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+  display: grid;
+  
+}
+
+.btn-doble-text{
+  font-size: smaller;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.btn-body-mini{
+   background-color: #2563eb;
+   opacity: .5;
+  color: white;
+  border: none;
+  padding: 0.1rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-body-mini:hover {
+  opacity: 1;
+}
+
+.btn-body:hover {
+  background-color: var(--color-surface);
+  
+}
+
+.btn-logo{
+  padding: .1rem;
+  max-width: 2rem;
+}
+
+.btn-add{
+  background-color: #000;
+  opacity: 1;
+  color: #fff;
+  font-weight: bolder;
+  display: flex;
+  justify-content: center;
+  height: 8vh !important;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  margin-right: 0;
+  align-items: center;
+  max-width: max-content;
+  margin-left: 2px;
+}
+
+.type-btn{
+  position: relative;
+  flex: 1;
+  padding: 4px 16px;
+  border: 1px solid #ccc;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: 0.3s;
+  opacity: 0.2;
+  display: flex;            
+  align-items: center;       
+  justify-content: center;   
+  gap: 6px;    
+}
+
+.type-btn.active{
+  background-color: #007bff; /* Verde para ALTA */
+  color: white;
+
+  opacity: 1;
+}

@@ -5,6 +5,7 @@ import Login from "./Login";
 import Productos from "../sections/Productos";
 import Clientes from "../sections/Clientes";
 import Proveedores from "../sections/Proveedores";
+import Dashboard from "../sections/Dashboard";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             </ProtectedRoute>
           }
         >
+          <Route path="/" element={<Dashboard />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/proveedores" element={<Proveedores />} />

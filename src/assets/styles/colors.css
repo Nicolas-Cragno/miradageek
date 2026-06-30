@@ -7,4 +7,6 @@
   --color-border: #b2614b;
   --color-shadow: rgba(14, 24, 40, 0.845);
   --color-light: #edd5ce;
+  --color-blur: rgba(0, 0, 0, 0.45);
+  --color-white: #fff
 }

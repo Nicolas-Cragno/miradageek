@@ -1,34 +1,70 @@
+import { useMemo, useState } from "react";
+import { FiSearch as SearchLogo } from "react-icons/fi";
 import "./css/Tabla.css";
 
 export default function Tabla({ data = [], campos = [], onSelect }) {
-  if (!data.length) {
-    return <p className="tabla-empty">Sin datos para mostrar</p>;
-  }
+  const [busqueda, setBusqueda] = useState("");
 
-  // Solo los campos que van en la tabla
   const camposTabla = campos.filter((c) => c.tabla);
+
+  const datosFiltrados = useMemo(() => {
+    if (!busqueda.trim()) return data;
+
+    const texto = busqueda.toLowerCase();
+
+    return data.filter((item) =>
+      camposTabla.some((campo) => {
+        const valor = item[campo.key];
+
+        if (valor === null || valor === undefined) return false;
+
+        return String(valor).toLowerCase().includes(texto);
+      }),
+    );
+  }, [data, busqueda, camposTabla]);
+
+  if (!data.length) {
+    return <p className="tabla-empty">...</p>;
+  }
 
   return (
     <div className="tabla-container">
-      <table className="tabla">
-        <thead>
-          <tr>
-            {camposTabla.map((campo) => (
-              <th key={campo.key}>{campo.label}</th>
-            ))}
-          </tr>
-        </thead>
+      <div className="tabla-search">
+        <input
+          type="text"
+          placeholder="Buscar..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="search-input"
+        />
+        <SearchLogo className="tabla-search-icon" />
+      </div>
 
-        <tbody>
-          {data.map((item, index) => (
-            <tr key={item.id || index} onClick={() => onSelect?.(item)}>
+      <div className="tabla-scroll">
+        <table className="tabla">
+          <thead>
+            <tr>
               {camposTabla.map((campo) => (
-                <td key={campo.key}>{formatValue(item[campo.key])}</td>
+                <th key={campo.key}>{campo.label}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {datosFiltrados.map((item, index) => (
+              <tr key={item.id || index} onClick={() => onSelect?.(item)}>
+                {camposTabla.map((campo) => (
+                  <td key={campo.key}>{formatValue(item[campo.key])}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {!datosFiltrados.length && (
+        <p className="tabla-empty">No se encontraron resultados.</p>
+      )}
     </div>
   );
 }
