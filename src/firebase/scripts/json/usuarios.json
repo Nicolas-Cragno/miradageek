@@ -1,0 +1,16 @@
+[
+  {
+    "id": "US-A0001",
+    "uid": "ubPTOp82a5ahTMAcX6ZhUaBRZEL2",
+    "nombre": "Mirada Geek",
+    "tipo": "03",
+    "mail": "geekmirada@gmail.com"
+  },
+  {
+    "id": "US-A0002",
+    "uid": "qgN6KgzqAwNRPKXTsTtI4QyVrPY2",
+    "nombre": "Nicolas Cragno",
+    "tipo": "04",
+    "mail": "nicolaslautaro.cragno@gmail.com"
+  }
+]

@@ -1,0 +1,11 @@
+[
+  { "id": "usuarios", "ultimo": 2 },
+  { "id": "clientes", "ultimo": 10 },
+  { "id": "productos", "ultimo": 102 },
+  { "id": "proveedores", "ultimo": 3 },
+  { "id": "sucursales", "ultimo": 1 },
+  { "id": "ventas", "ultimo": 0 },
+  { "id": "pedidos", "ultimo": 0 },
+  { "id": "detalleVenta", "ultimo": 0 },
+  { "id": "detallePedido", "ultimo": 0 }
+]

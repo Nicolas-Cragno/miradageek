@@ -1,0 +1,41 @@
+[
+  {
+    "id": "PV-A0001",
+    "nombre": "Generico",
+    "cuit": null,
+    "razonSocial": "",
+    "direccion": "",
+    "localidad": "",
+    "contacto": "",
+    "telefono": "",
+    "codArea": "",
+    "mail": "",
+    "cuentaCorriente": ""
+  },
+  {
+    "id": "PV-A0002",
+    "nombre": "BBCW Distributors",
+    "cuit": null,
+    "razonSocial": "",
+    "direccion": "",
+    "localidad": "",
+    "contacto": "",
+    "telefono": "",
+    "codArea": "",
+    "mail": "",
+    "cuentaCorriente": ""
+  },
+  {
+    "id": "PV-A0003",
+    "nombre": "Mercado Toys",
+    "cuit": null,
+    "razonSocial": "",
+    "direccion": "",
+    "localidad": "",
+    "contacto": "",
+    "telefono": "",
+    "codArea": "",
+    "mail": "",
+    "cuentaCorriente": ""
+  }
+]

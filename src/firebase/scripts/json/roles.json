@@ -1,0 +1,11 @@
+[
+  {
+    "id": "01",
+    "nombre": "user",
+    "tipo": "reader",
+    "detalle": "Lectura de listados"
+  },
+  { "id": "02", "nombre": "admin", "tipo": "writer" },
+  { "id": "03", "nombre": "superadmin", "tipo": "manager" },
+  { "id": "04", "nombre": "dev", "tipo": "developer" }
+]

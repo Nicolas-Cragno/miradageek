@@ -1,0 +1,52 @@
+[
+  {
+    "id": "FGR",
+    "nombre": "FIGURA",
+    "detalle": "Productos con apariencia de persona, personaje, criatura o cualquier otra representación similar, destinados al juego, exhibición o colección."
+  },
+  {
+    "id": "VHC",
+    "nombre": "VEHICULO",
+    "detalle": "Representaciones de medios de transporte terrestres, como autos, motos, camiones, trenes o similares."
+  },
+  {
+    "id": "NVE",
+    "nombre": "NAVE",
+    "detalle": "Representaciones de medios de transporte aéreos, marítimos o espaciales, como aviones, barcos o naves espaciales."
+  },
+  {
+    "id": "JDM",
+    "nombre": "JUEGO DE MESA",
+    "detalle": "Juegos de mesa, juegos de cartas y otros juegos de entretenimiento de mesa."
+  },
+  {
+    "id": "LBR",
+    "nombre": "LIBRO",
+    "detalle": "Libros, novelas y publicaciones impresas de texto."
+  },
+  {
+    "id": "CMC",
+    "nombre": "COMIC",
+    "detalle": "Cómics, historietas, mangas y otras publicaciones gráficas."
+  },
+  {
+    "id": "PLC",
+    "nombre": "PELUCHE",
+    "detalle": "Juguetes o artículos de tela rellenos, con apariencia de personajes, animales u otros diseños."
+  },
+  {
+    "id": "ACC",
+    "nombre": "ACCESORIO",
+    "detalle": "Artículos complementarios o decorativos, como llaveros, pines, tazas, posters, vasos, etc."
+  },
+  {
+    "id": "TXT",
+    "nombre": "TEXTIL",
+    "detalle": "Prendas de vestir y otros artículos confeccionados en tela, como remeras, buzos, gorras o medias."
+  },
+  {
+    "id": "MDK",
+    "nombre": "MODEL KIT",
+    "detalle": "Kits para armar y/o pintar, como Gundam, maquetas o modelos coleccionables."
+  }
+]
