@@ -1,7 +1,12 @@
 import { DataProvider } from "./DataContext";
+import { ProductosProvider } from "./ProductosContext";
 
 const DataLayer = ({ children }) => {
-  return <DataProvider>{children}</DataProvider>;
+  return (
+    <DataProvider>
+      <ProductosProvider>{children}</ProductosProvider>
+    </DataProvider>
+  );
 };
 
 export default DataLayer;

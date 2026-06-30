@@ -1,0 +1,28 @@
+.section-container {
+  display: flex;
+  width: 100%;
+  height: 100vh; /* o 100% si tu layout ya controla altura */
+  overflow: hidden;
+}
+
+/* IZQUIERDA */
+.section-list {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+/* DERECHA (FICHA) */
+.section-detail {
+  width: 50%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}

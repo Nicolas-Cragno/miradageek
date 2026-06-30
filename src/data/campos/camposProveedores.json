@@ -1,0 +1,84 @@
+[
+  {
+    "key": "id",
+    "label": "Identificador",
+    "tabla": true,
+    "ficha": true,
+    "form": false
+  },
+  {
+    "key": "nombre",
+    "label": "Nombre",
+    "tabla": true,
+    "ficha": true,
+    "form": true,
+    "input": "text",
+    "use": "database"
+  },
+  {
+    "key": "direccion",
+    "label": "Direccion",
+    "ficha": true,
+    "form": true,
+    "input": "text",
+    "use": "database"
+  },
+  {
+    "key": "localidad",
+    "label": "Localidad",
+    "ficha": true,
+    "form": true,
+    "input": "text",
+    "use": "database"
+  },
+  {
+    "key": "contacto",
+    "label": "Contacto",
+    "tabla": true,
+    "ficha": false,
+    "form": true,
+    "input": "text",
+    "use": "database"
+  },
+  {
+    "key": "codigoArea",
+    "label": "Codigo de area",
+    "ficha": true,
+    "form": true,
+    "input": "select",
+    "options": "codigoArea",
+    "use": "database"
+  },
+  {
+    "key": "telefono",
+    "label": "Telefono",
+    "ficha": true,
+    "form": false,
+    "input": "number",
+    "use": "database"
+  },
+  {
+    "key": "cuit",
+    "label": "CUIT / CUIL",
+    "ficha": true,
+    "form": true,
+    "input": "number",
+    "use": "database"
+  },
+  {
+    "key": "razonSocial",
+    "label": "Razon Social",
+    "ficha": true,
+    "form": true,
+    "input": "text",
+    "use": "database"
+  },
+  {
+    "key": "detalle",
+    "label": "Detalle",
+    "ficha": true,
+    "form": true,
+    "input": "textarea",
+    "use": "database"
+  }
+]

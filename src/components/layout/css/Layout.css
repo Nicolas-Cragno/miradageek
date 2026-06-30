@@ -1,0 +1,13 @@
+.layout {
+  display: flex;
+}
+
+.layout-content {
+  flex: 1;
+  margin-left: 220px;
+  transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.layout-content.closed {
+  margin-left: 100px;
+}

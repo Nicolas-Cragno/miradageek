@@ -1,0 +1,29 @@
+.tabla-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-text);
+  color: var(--color-back);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tabla thead {
+  background: var(--color-light);
+}
+
+.tabla th,
+.tabla td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+}
+
+.tabla tbody tr:hover {
+  background: var(--color-light);
+}

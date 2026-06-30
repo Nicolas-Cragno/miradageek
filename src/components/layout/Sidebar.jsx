@@ -1,13 +1,15 @@
-import { useState } from "react";
-import "./SideBar.css";
+import { NavLink } from "react-router-dom";
+import "./css/Sidebar.css";
+import Logo from "../../assets/logos/Logo.png";
+import { GiBoxUnpacking as BoxLogo } from "react-icons/gi";
+import { IoPerson as CustomerLogo } from "react-icons/io5";
+import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
 
-export default function SideBar() {
-  const [open, setOpen] = useState(true);
-
+export default function Sidebar({ open, setOpen }) {
   return (
     <div className={`sidebar ${open ? "open" : "closed"}`}>
       <div className="sidebar-header">
-        <h2 className="logo">GECKO</h2>
+        <img src={Logo} alt="" className="logo" />
 
         <button className="toggle-btn" onClick={() => setOpen(!open)}>
           {open ? "⟨" : "⟩"}
@@ -15,17 +17,20 @@ export default function SideBar() {
       </div>
 
       <nav className="sidebar-nav">
-        <a href="#productos" className="nav-item">
-          📦 {open && "Productos"}
-        </a>
+        <NavLink to="/productos" className="nav-item">
+          <BoxLogo className="nav-logo" />{" "}
+          <span className={`nav-text`}>Productos</span>
+        </NavLink>
 
-        <a href="#clientes" className="nav-item">
-          👤 {open && "Clientes"}
-        </a>
+        <NavLink to="/clientes" className="nav-item">
+          <CustomerLogo className="nav-logo" />{" "}
+          <span className={`nav-text`}>Clientes</span>
+        </NavLink>
 
-        <a href="#proveedores" className="nav-item">
-          🚚 {open && "Proveedores"}
-        </a>
+        <NavLink to="/proveedores" className="nav-item">
+          <ProviderLogo className="nav-logo" />{" "}
+          <span className={`nav-text`}>Proveedores</span>
+        </NavLink>
       </nav>
     </div>
   );

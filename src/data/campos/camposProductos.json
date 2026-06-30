@@ -1,0 +1,67 @@
+[
+  {
+    "key": "id",
+    "label": "Identificador",
+    "tabla": true,
+    "ficha": true,
+    "form": false
+  },
+  {
+    "key": "descripcion",
+    "label": "Descripción",
+    "tabla": true,
+    "ficha": true,
+    "form": true,
+    "input": "texarea",
+    "use": "database"
+  },
+  {
+    "key": "costo",
+    "label": "Costo",
+    "ficha": false,
+    "form": true,
+    "input": "number",
+    "use": "database"
+  },
+  {
+    "key": "labelCosto",
+    "label": "Costo",
+    "ficha": true,
+    "form": false
+  },
+  {
+    "key": "precio",
+    "label": "Precio",
+    "ficha": false,
+    "form": true,
+    "input": "number",
+    "use": "database"
+  },
+  {
+    "key": "labelPrecio",
+    "label": "Precio",
+    "ficha": true,
+    "form": false
+  },
+  {
+    "key": "tipo",
+    "label": "Tipo",
+    "ficha": false,
+    "form": true,
+    "input": "select",
+    "options": "tipoProducto",
+    "use": "database"
+  },
+  {
+    "key": "labelTipo",
+    "label": "Tipo",
+    "ficha": true,
+    "form": false
+  },
+  {
+    "key": "stock",
+    "label": "Stock",
+    "ficha": true,
+    "form": false
+  }
+]
