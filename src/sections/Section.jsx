@@ -36,6 +36,10 @@ export default function Section({
   function nuevo() {
     setEditingItem(null);
     setFormOpen(true);
+
+    if (isMobile) {
+      setView("form");
+    }
   }
 
   function editar() {
@@ -107,6 +111,22 @@ export default function Section({
 
             <Tabla data={data} campos={campos} onSelect={seleccionar} />
           </div>
+        ) : view === "form" ? (
+          <FormComponent
+            open={formOpen}
+            item={editingItem}
+            campos={campos}
+            collection={collection}
+            title={editingItem ? `Editar ${title}` : `Nuevo ${title}`}
+            onClose={() => {
+              setFormOpen(false);
+              setView("list");
+            }}
+            onSave={guardar}
+            detailCollection={detailCollection}
+            camposDetalle={camposDetalle}
+            detalleKey={detailCollection}
+          />
         ) : (
           <>
             <div className="section-detail-mobile">
