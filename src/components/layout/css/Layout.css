@@ -1,14 +1,22 @@
 .layout {
-  display: flex;
+    display: flex;
+    min-height: 100vh;
 }
 
 .layout-content {
-  flex: 1;
-  margin-left: 220px;
-  transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  
+    flex: 1;
+    margin-left: 220px;
+    transition: margin-left .35s cubic-bezier(.4,0,.2,1);
 }
 
 .layout-content.closed {
-  margin-left: 100px;
+    margin-left: 100px;
+}
+
+@media (max-width:768px) {
+    .layout-content,
+    .layout-content.closed {
+        margin-left: 0;
+        margin-bottom: 65px;
+    }
 }
