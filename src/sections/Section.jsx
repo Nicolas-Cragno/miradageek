@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Tabla from "../components/tablas/Tabla";
 import Ficha from "../components/fichas/Ficha";
 import Form from "../components/formularios/Form";
+import { FiArrowLeft } from "react-icons/fi";
 
 import "./css/Sections.css";
 import LogoButton from "../components/buttons/LogoButton";
@@ -104,7 +105,7 @@ export default function Section({
       <>
         {view === "list" ? (
           <div className="section-list">
-            <div className="section-header">
+            <div className="section-header ">
               <h1>{title}</h1>
               <TextButton text="+ Nuevo" onClick={nuevo} />
             </div>
@@ -130,7 +131,9 @@ export default function Section({
         ) : (
           <>
             <div className="section-detail-mobile">
-              <TextButton text="← Volver" onClick={volver} />
+              <button type="button" className="modal-close" onClick={volver}>
+                <FiArrowLeft />
+              </button>
 
               <Ficha item={selected} campos={campos} onEdit={editar} />
             </div>

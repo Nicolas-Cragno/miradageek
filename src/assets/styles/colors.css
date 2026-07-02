@@ -9,4 +9,5 @@
   --color-light: #edd5ce;
   --color-blur: rgba(0, 0, 0, 0.45);
   --color-white: #fff
+  --color-transparent: rgba(0, 0, 0, 0.5);
 }

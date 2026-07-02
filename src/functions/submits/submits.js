@@ -1,4 +1,4 @@
-import { agregar, modificar } from "./abmFunctions";
+import { agregar, modificar, eliminar } from "./abmFunctions";
 
 export async function submit({
   collection,
@@ -16,40 +16,48 @@ export async function submit({
       data[c.key] = formData[c.key];
     });
 
+  const idReturn = idElemento;
+
   if (idElemento) {
     await modificar(collection, idElemento, data);
   } else {
-    await agregar(collection, data);
+    idReturn = await agregar(collection, data);
   }
 
   onGuardar?.();
   onClose?.();
+
+  return idReturn;
 }
 
 export async function submitMultiple({
-  mainCollection,
-  detailCollection,
-  mainData,
-  detailData = [],
-  onGuardar,
-  onClose,
+  collection,
+  previousData = [],
+  formData = [],
+  campos,
 }) {
-  try {
-    const compraId = await agregar(mainCollection, mainData);
+  const tareas = [];
 
-    await Promise.all(
-      detailData.map((item) =>
-        agregar(detailCollection, {
-          ...item,
-          compra: compraId, // FK
-        })
-      )
+  const previousMap = new Map(
+    previousData.map((item) => [item.id, item])
+  );
+
+  formData.forEach((item) => {
+    tareas.push(
+      submit({
+        collection,
+        formData: item,
+        campos,
+        idElemento: item.id ?? null,
+      })
     );
 
-    onGuardar?.();
-    onClose?.();
-  } catch (error) {
-    console.error("[submitMultiple] Error:", error);
-    throw error;
-  }
+    previousMap.delete(item.id);
+  });
+
+  previousMap.forEach((item) => {
+    tareas.push(eliminar(collection, item.id));
+  });
+
+  await Promise.all(tareas);
 }

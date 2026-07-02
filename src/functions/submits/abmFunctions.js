@@ -1,9 +1,9 @@
 import { db } from "../../firebase/firebaseConfig";
 import {
-  collection,
   setDoc,
   doc,
   updateDoc,
+  deleteDoc,
   runTransaction,
 } from "firebase/firestore";
 
@@ -25,7 +25,6 @@ export async function agregar(coleccion, data) {
     throw error;
   }
 }
-
 export async function modificar(coleccion, id, data) {
   try {
     const ref = doc(db, coleccion, id);
@@ -35,6 +34,18 @@ export async function modificar(coleccion, id, data) {
     return true;
   } catch (error) {
     console.error("[Firestore] Error modificando:", error);
+    throw error;
+  }
+}
+export async function eliminar(coleccion, id) {
+  try {
+    const ref = doc(db, coleccion, id);
+
+    await deleteDoc(ref);
+
+    return true;
+  } catch (error) {
+    console.error("[Firestore] Error eliminando:", error);
     throw error;
   }
 }
@@ -91,9 +102,8 @@ const configuracionIds = {
   },
 };
 
-
-
 function siguienteSerie(serie) {
+  // para esta parte del codigo → CL->>"A"<<<0001
   const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   const arr = serie.split("");

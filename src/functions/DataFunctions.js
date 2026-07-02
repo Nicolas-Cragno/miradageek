@@ -1,3 +1,5 @@
+// Fechas y horas
+
 export const formatearCampoFirestore = (valor) => {
     if (valor === null || valor === undefined) return "-";
     if (typeof valor === "boolean") {
@@ -70,7 +72,6 @@ export const formatearCampoFirestore = (valor) => {
     // -----------------------------
     return String(valor);
 };
-
 export function formatearArrayFirestore(array) {
     if (!Array.isArray(array) || array.length === 0) return "-";
 
@@ -95,7 +96,6 @@ export function formatearArrayFirestore(array) {
 export function isTimestamp(value) {
     return value && typeof value.toDate === "function";
 }
-
 export function timestampToInput(value) {
     return value.toDate().toISOString().slice(0, 16);
 }

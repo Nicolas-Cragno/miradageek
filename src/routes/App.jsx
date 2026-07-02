@@ -7,6 +7,7 @@ import Clientes from "../sections/Clientes";
 import Proveedores from "../sections/Proveedores";
 import Dashboard from "../sections/Dashboard";
 import Compras from "../sections/Compras";
+import "./css/App.css";
 
 export default function App() {
   return (
