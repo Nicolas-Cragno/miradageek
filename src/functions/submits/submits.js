@@ -1,4 +1,5 @@
-import { agregar, modificar, eliminar } from "./abmFunctions";
+import { agregar, modificar, eliminar, eliminarDetalle } from "./abmFunctions";
+import { serverTimestamp } from "firebase/firestore";
 
 export async function submit({
   collection,
@@ -7,21 +8,49 @@ export async function submit({
   idElemento = null,
   onGuardar,
   onClose,
+  detailCollection = null,
+  detailRef = null,
 }) {
   const data = {};
 
   campos
     .filter((c) => c.form)
     .forEach((c) => {
-      data[c.key] = formData[c.key];
+      if (c.use === "database") {
+        data[c.key] = formData[c.key];
+      }
     });
 
-  const idReturn = idElemento;
+  let idReturn = idElemento;
 
   if (idElemento) {
     await modificar(collection, idElemento, data);
+    if (detailCollection && detailRef) {
+      console.log("elimnardetalle")
+      await eliminarDetalle(detailCollection, detailRef, idReturn);
+    }
   } else {
-    idReturn = await agregar(collection, data);
+    idReturn = await agregar(collection, { ...data, fecha: serverTimestamp() });
+  }
+
+  // GUARDAR DETALLE
+  if (detailCollection && detailRef) {
+    const campoDetalle = campos.find(c => c.use === "detailDatabase");
+
+    if (campoDetalle) {
+      const detalle = campoDetalle
+        ? formData[campoDetalle.key] ?? []
+        : [];
+
+
+      for (const item of detalle) {
+        await agregar(detailCollection, {
+          ...item,
+          fecha: serverTimestamp(),
+          [detailRef]: idReturn
+        })
+      }
+    }
   }
 
   onGuardar?.();
@@ -30,34 +59,3 @@ export async function submit({
   return idReturn;
 }
 
-export async function submitMultiple({
-  collection,
-  previousData = [],
-  formData = [],
-  campos,
-}) {
-  const tareas = [];
-
-  const previousMap = new Map(
-    previousData.map((item) => [item.id, item])
-  );
-
-  formData.forEach((item) => {
-    tareas.push(
-      submit({
-        collection,
-        formData: item,
-        campos,
-        idElemento: item.id ?? null,
-      })
-    );
-
-    previousMap.delete(item.id);
-  });
-
-  previousMap.forEach((item) => {
-    tareas.push(eliminar(collection, item.id));
-  });
-
-  await Promise.all(tareas);
-}

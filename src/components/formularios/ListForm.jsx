@@ -34,7 +34,6 @@ export default function ListForm({ productos = [], value = [], onChange }) {
       onChange([
         ...listado,
         {
-          id: Date.now(),
           idProducto: prod.id,
           descripcion: prod.descripcion || prod.nombre,
           cantidad: Number(cantidad),
@@ -49,7 +48,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   };
 
   const eliminarItem = (id) => {
-    onChange(listado.filter((x) => x.id !== id));
+    onChange(listado.filter((x) => x.idProducto !== id));
   };
 
   const total = listado.reduce(
@@ -60,7 +59,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   const actualizarCantidad = (id, cantidad) => {
     onChange(
       listado.map((item) =>
-        item.id === id ? { ...item, cantidad: Number(cantidad) } : item,
+        item.idProducto === id ? { ...item, cantidad: Number(cantidad) } : item,
       ),
     );
   };
@@ -68,7 +67,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   const actualizarPrecio = (id, precio) => {
     onChange(
       listado.map((item) =>
-        item.id === id ? { ...item, precio: Number(precio) } : item,
+        item.idProducto === id ? { ...item, precio: Number(precio) } : item,
       ),
     );
   };
@@ -144,7 +143,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
           )}
 
           {listado.map((item) => (
-            <tr key={item.id}>
+            <tr key={item.idProducto}>
               <td>{item.descripcion}</td>
 
               <td>
@@ -152,7 +151,9 @@ export default function ListForm({ productos = [], value = [], onChange }) {
                   type="number"
                   min="1"
                   value={item.cantidad}
-                  onChange={(e) => actualizarCantidad(item.id, e.target.value)}
+                  onChange={(e) =>
+                    actualizarCantidad(item.idProducto, e.target.value)
+                  }
                 />
               </td>
 
@@ -160,7 +161,9 @@ export default function ListForm({ productos = [], value = [], onChange }) {
                 <input
                   type="number"
                   value={item.precio}
-                  onChange={(e) => actualizarPrecio(item.id, e.target.value)}
+                  onChange={(e) =>
+                    actualizarPrecio(item.idProducto, e.target.value)
+                  }
                 />
               </td>
 
@@ -170,7 +173,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
                 <button
                   type="button"
                   className="btn-delete"
-                  onClick={() => eliminarItem(item.id)}
+                  onClick={() => eliminarItem(item.idProducto)}
                 >
                   🗑
                 </button>

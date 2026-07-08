@@ -13,6 +13,8 @@ export default function Form({
   title,
   onClose,
   onSave,
+  detailCollection = null,
+  detailRef = null,
 }) {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
@@ -30,6 +32,30 @@ export default function Form({
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    // para las compras & ventas
+    const campoDetalle = campos.find((c) => c.use === "detailDatabase");
+    const campoMonto = campos.find((c) => c.key === "monto");
+
+    if (!campoDetalle || !campoMonto) return;
+
+    const items = formData[campoDetalle.key] ?? [];
+
+    const total = items.reduce((acc, item) => {
+      const cantidad = Number(item.cantidad) || 0;
+      const precio = Number(item.precio) || 0;
+
+      return acc + cantidad * precio;
+    }, 0);
+
+    if (formData.monto !== total) {
+      setFormData((prev) => ({
+        ...prev,
+        monto: total,
+      }));
+    }
+  }, [formData.detalleCompras, campos]);
 
   useEffect(() => {
     if (!open) return;
@@ -51,9 +77,8 @@ export default function Form({
       setFormData(init);
     }
   }, [item, campos, open]);
-  console.log("Render Form antes del return", { open });
+
   if (!open) return null;
-  console.log("Render Form despues del return", { open });
   const camposForm = campos.filter((c) => c.form);
 
   function handleChange(key, value) {
@@ -69,7 +94,7 @@ export default function Form({
     setSaving(true);
 
     try {
-      const mainData = {};
+      let mainData = {};
 
       camposForm.forEach((c) => {
         mainData[c.key] = formData[c.key];
@@ -82,6 +107,8 @@ export default function Form({
         idElemento: item?.id ?? null,
         onGuardar: onSave,
         onClose,
+        detailCollection,
+        detailRef,
       });
     } finally {
       setSaving(false);

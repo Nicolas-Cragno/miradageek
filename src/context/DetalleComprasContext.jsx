@@ -9,7 +9,7 @@ export function DetalleComprasProvider({ children }) {
 
   const detalleComprasEnriquecidos = useMemo(() => {
     return detalleCompras.map((dc) => {
-      const prod = productos.find((pd) => pd.id === dc.producto);
+      const prod = productos.find((pd) => pd.id === dc.idProducto);
       const lbl = `${prod.id} - ${prod.descripcion} (x ${dc.cantidad || 0})`;
       return {
         ...dc,

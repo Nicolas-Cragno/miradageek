@@ -6,6 +6,7 @@ import { useData } from "../../context/DataContext.jsx";
 export default function InputForm({ campo, value, onChange }) {
   const { key, label, input = "text", options } = campo;
   const data = useData();
+
   function handleChange(e) {
     let val = e.target.value;
 

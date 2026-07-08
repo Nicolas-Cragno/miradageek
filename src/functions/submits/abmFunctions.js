@@ -5,6 +5,10 @@ import {
   updateDoc,
   deleteDoc,
   runTransaction,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 
 
@@ -46,6 +50,27 @@ export async function eliminar(coleccion, id) {
     return true;
   } catch (error) {
     console.error("[Firestore] Error eliminando:", error);
+    throw error;
+  }
+}
+export async function eliminarDetalle(coleccion, campoRef, idRef) {
+  try {
+    const q = query(
+      collection(db, coleccion),
+      where(campoRef, "==", idRef)
+    );
+
+    const snapshot = await getDocs(q);
+
+    const tareas = snapshot.docs.map((d) =>
+      deleteDoc(doc(db, coleccion, d.id))
+    );
+
+    await Promise.all(tareas);
+
+    return true;
+  } catch (error) {
+    console.error("[Firestore] Error eliminando detalle:", error);
     throw error;
   }
 }

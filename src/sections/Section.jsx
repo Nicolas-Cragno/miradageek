@@ -16,7 +16,7 @@ export default function Section({
   collection = "",
   FormComponent = Form,
   detailCollection = null,
-  camposDetalle = [],
+  detailRef = null,
 }) {
   const [selected, setSelected] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -95,8 +95,7 @@ export default function Section({
           onClose={() => setFormOpen(false)}
           onSave={guardar}
           detailCollection={detailCollection}
-          camposDetalle={camposDetalle}
-          detalleKey={detailCollection}
+          detailRef={detailRef}
         />
       </>
     );
@@ -125,8 +124,7 @@ export default function Section({
             }}
             onSave={guardar}
             detailCollection={detailCollection}
-            camposDetalle={camposDetalle}
-            detalleKey={detailCollection}
+            detailRef={detailRef}
           />
         ) : (
           <>
@@ -146,8 +144,7 @@ export default function Section({
               onClose={() => setFormOpen(false)}
               onSave={guardar}
               detailCollection={detailCollection}
-              camposDetalle={camposDetalle}
-              detalleKey={detailCollection}
+              detailRef={detailRef}
             />
           </>
         )}

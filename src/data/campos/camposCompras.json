@@ -78,17 +78,18 @@
     "tabla": false,
     "ficha": false,
     "form": true,
-    "input": "number",
+    "input": "disabled",
     "use": "database"
   },
   {
     "key": "detalle",
     "label": "Detalle",
     "ficha": true,
-    "form": false,
+    "form": true,
     "input": "textarea",
     "use": "database"
   },
+
   {
     "key": "detalleCompras",
     "label": "Items",
@@ -97,7 +98,7 @@
     "form": true,
     "input": "list",
     "options": "productos",
-    "use": "database"
+    "use": "detailDatabase"
   },
   {
     "key": "labelEstado",

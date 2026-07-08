@@ -12,6 +12,8 @@ export default function Compras() {
       campos={campos}
       title="Compras / Pedidos realizados"
       collection="compras"
+      detailCollection="detalleCompras"
+      detailRef="compra"
     />
   );
 }
