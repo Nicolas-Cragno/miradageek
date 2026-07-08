@@ -19,7 +19,7 @@
     "use": "database"
   },
   {
-    "key": "producto",
+    "key": "idProducto",
     "label": "Producto",
     "tabla": false,
     "ficha": false,

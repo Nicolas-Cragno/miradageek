@@ -53,6 +53,8 @@ export async function eliminar(coleccion, id) {
     throw error;
   }
 }
+
+// operacionales (compras y ventas)
 export async function eliminarDetalle(coleccion, campoRef, idRef) {
   try {
     const q = query(
@@ -62,15 +64,64 @@ export async function eliminarDetalle(coleccion, campoRef, idRef) {
 
     const snapshot = await getDocs(q);
 
-    const tareas = snapshot.docs.map((d) =>
+    const detalles = snapshot.docs.map((d) =>
       deleteDoc(doc(db, coleccion, d.id))
     );
 
-    await Promise.all(tareas);
+    await Promise.all(detalles);
 
     return true;
   } catch (error) {
-    console.error("[Firestore] Error eliminando detalle:", error);
+    console.error("[Error] Eliminando detalle:", error);
+    throw error;
+  }
+}
+export async function actualizarProducto(idProducto, campoRef, cantidad, valor) {
+  try {
+    const q = query(collection(db, "productos"), where("id", "==", idProducto));
+
+    const snapshot = await getDocs(q);
+
+    const producto = snapshot.docs[0];
+
+    const productoRef = doc(db, "productos", producto.id);
+
+    await runTransaction(db, async (ts) => {
+      const pdSnap = await ts.get(productoRef);
+
+      const pd = pdSnap.data();
+
+      const stockActual = Number(pd.stock) || 0;
+
+      let nuevoStock = stockActual;
+
+      let data = {};
+
+      switch (campoRef) {
+        case "compra": nuevoStock += Number(cantidad);
+          data = {
+            stock: nuevoStock,
+            costo: Number(valor)
+          }; break;
+        case "venta": nuevoStock -= Number(cantidad);
+
+          data = {
+            stock: nuevoStock,
+            precio: Number(valor),
+          }; break;
+        default:
+          data = {
+            stock: nuevoStock
+          }
+      };
+
+      ts.update(productoRef, data);
+    });
+
+    return true;
+
+  } catch (error) {
+    console.error("[Error] Al actualizar producto:", error);
     throw error;
   }
 }

@@ -7,6 +7,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   const [producto, setProducto] = useState("");
   const [cantidad, setCantidad] = useState(1);
   const [precio, setPrecio] = useState("");
+  const [moneda, setMoneda] = useState("ARS");
 
   const agregarItem = () => {
     if (!producto) return;
@@ -21,13 +22,13 @@ export default function ListForm({ productos = [], value = [], onChange }) {
 
     if (existente) {
       onChange(
-        listado.map((x) =>
-          x.idProducto === prod.id
+        listado.map((item) =>
+          item.idProducto === prod.id
             ? {
-                ...x,
-                cantidad: x.cantidad + Number(cantidad),
+                ...item,
+                cantidad: item.cantidad + Number(cantidad),
               }
-            : x,
+            : item,
         ),
       );
     } else {
@@ -38,6 +39,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
           descripcion: prod.descripcion || prod.nombre,
           cantidad: Number(cantidad),
           precio: Number(precio),
+          moneda: moneda,
         },
       ]);
     }
@@ -45,6 +47,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
     setProducto("");
     setCantidad(1);
     setPrecio("");
+    //setMoneda("ARS");
   };
 
   const eliminarItem = (id) => {
@@ -117,6 +120,11 @@ export default function ListForm({ productos = [], value = [], onChange }) {
           placeholder="Precio"
         />
 
+        <select value={moneda} onChange={(e) => setMoneda(e.target.value)}>
+          <option value="ARS">Pesos ($)</option>
+          <option value="USD">Dólares (U$S)</option>
+        </select>
+
         <button type="button" className="btn-add" onClick={agregarItem}>
           Agregar
         </button>
@@ -128,6 +136,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
             <th>Producto</th>
             <th>Cant.</th>
             <th>Precio</th>
+            <th>Moneda</th>
             <th>Subtotal</th>
             <th></th>
           </tr>
@@ -166,6 +175,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
                   }
                 />
               </td>
+              <td>{item.moneda}</td>
 
               <td>${(item.cantidad * item.precio).toLocaleString()}</td>
 

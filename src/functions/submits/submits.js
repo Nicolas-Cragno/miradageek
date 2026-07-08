@@ -1,4 +1,4 @@
-import { agregar, modificar, eliminar, eliminarDetalle } from "./abmFunctions";
+import { agregar, modificar, eliminar, eliminarDetalle, actualizarProducto } from "./abmFunctions";
 import { serverTimestamp } from "firebase/firestore";
 
 export async function submit({
@@ -48,7 +48,9 @@ export async function submit({
           ...item,
           fecha: serverTimestamp(),
           [detailRef]: idReturn
-        })
+        });
+
+        await actualizarProducto(item.idProducto, detailRef, item.cantidad, item.precio)
       }
     }
   }
