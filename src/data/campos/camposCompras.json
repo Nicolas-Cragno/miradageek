@@ -8,7 +8,7 @@
     "input": "disabled"
   },
   {
-    "key" : "label",
+    "key": "label",
     "label": "Compra",
     "tabla": false,
     "ficha": false,
@@ -90,11 +90,15 @@
     "use": "database"
   },
   {
-  "key": "detalleCompras",
-  "label": "Items",
-  "ficha": true,
-  "type": "list"
-},
+    "key": "detalleCompras",
+    "label": "Items",
+    "tabla": false,
+    "ficha": true,
+    "form": true,
+    "input": "list",
+    "options": "productos",
+    "use": "database"
+  },
   {
     "key": "labelEstado",
     "label": "Estado",

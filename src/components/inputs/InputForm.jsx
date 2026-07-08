@@ -1,9 +1,11 @@
 import OptionsContent from "../formularios/OptionsContent";
 import { Timestamp } from "firebase/firestore";
+import ListForm from "../formularios/ListForm.jsx";
+import { useData } from "../../context/DataContext.jsx";
 
 export default function InputForm({ campo, value, onChange }) {
   const { key, label, input = "text", options } = campo;
-
+  const data = useData();
   function handleChange(e) {
     let val = e.target.value;
 
@@ -42,6 +44,14 @@ export default function InputForm({ campo, value, onChange }) {
 
       {(input === "text" || input === "number") && (
         <input type={input} value={value ?? ""} onChange={handleChange} />
+      )}
+
+      {input === "list" && (
+        <ListForm
+          productos={data[options] || []}
+          value={value ?? []}
+          onChange={(nuevoValor) => onChange(key, nuevoValor)}
+        />
       )}
     </div>
   );

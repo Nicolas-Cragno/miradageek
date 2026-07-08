@@ -42,9 +42,12 @@ export default function Form({
       campos
         .filter((c) => c.form)
         .forEach((c) => {
-          init[c.key] = c.default ?? "";
+          if (c.input === "list") {
+            init[c.key] = [];
+          } else {
+            init[c.key] = c.default ?? "";
+          }
         });
-
       setFormData(init);
     }
   }, [item, campos, open]);
@@ -104,7 +107,12 @@ export default function Form({
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             {camposForm.map((campo) => (
-              <div key={campo.key} className="form-group">
+              <div
+                key={campo.key}
+                className={`form-group ${
+                  campo.input === "list" ? "form-group-full" : ""
+                }`}
+              >
                 <InputForm
                   campo={campo}
                   value={formData[campo.key]}

@@ -26,17 +26,20 @@ export default function Sidebar({ open, setOpen }) {
           <BoxLogo className="nav-icon" />
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Productos</span>
         </NavLink>
-
         <NavLink to="/clientes" className="nav-item">
           <CustomerLogo className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Clientes</span>
         </NavLink>
-
         <NavLink to="/proveedores" className="nav-item">
           <ProviderLogo className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>
             Proveedores
           </span>
+        </NavLink>
+        *
+        <NavLink to="/compras" className="nav-item">
+          <ProviderLogo className="nav-logo" />{" "}
+          <span className={`nav-text ${!open ? "hidden" : ""}`}>Compras</span>
         </NavLink>
       </nav>
     </div>
