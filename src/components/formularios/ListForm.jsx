@@ -57,6 +57,22 @@ export default function ListForm({ productos = [], value = [], onChange }) {
     0,
   );
 
+  const actualizarCantidad = (id, cantidad) => {
+    onChange(
+      listado.map((item) =>
+        item.id === id ? { ...item, cantidad: Number(cantidad) } : item,
+      ),
+    );
+  };
+
+  const actualizarPrecio = (id, precio) => {
+    onChange(
+      listado.map((item) =>
+        item.id === id ? { ...item, precio: Number(precio) } : item,
+      ),
+    );
+  };
+
   return (
     <div className="listform">
       <div className="listform-header">
@@ -131,9 +147,22 @@ export default function ListForm({ productos = [], value = [], onChange }) {
             <tr key={item.id}>
               <td>{item.descripcion}</td>
 
-              <td>{item.cantidad}</td>
+              <td>
+                <input
+                  type="number"
+                  min="1"
+                  value={item.cantidad}
+                  onChange={(e) => actualizarCantidad(item.id, e.target.value)}
+                />
+              </td>
 
-              <td>${item.precio.toLocaleString()}</td>
+              <td>
+                <input
+                  type="number"
+                  value={item.precio}
+                  onChange={(e) => actualizarPrecio(item.id, e.target.value)}
+                />
+              </td>
 
               <td>${(item.cantidad * item.precio).toLocaleString()}</td>
 
