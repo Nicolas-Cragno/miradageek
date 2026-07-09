@@ -1,9 +1,16 @@
-import { agregar, modificar, eliminar, eliminarDetalle, actualizarProducto } from "./abmFunctions";
+import {
+  agregar,
+  modificar,
+  eliminar,
+  eliminarDetalle,
+  actualizarProducto,
+} from "./abmFunctions";
 import { serverTimestamp } from "firebase/firestore";
 
 export async function submit({
   collection,
   formData,
+  originalData = {},
   campos,
   idElemento = null,
   onGuardar,
@@ -22,11 +29,12 @@ export async function submit({
     });
 
   let idReturn = idElemento;
+  let diferenciaCantidad = 0; // para los casos de modificacion (si de 1 pasa a 3 deben actualizarse 2)
 
   if (idElemento) {
     await modificar(collection, idElemento, data);
     if (detailCollection && detailRef) {
-      console.log("elimnardetalle")
+      console.log("elimnardetalle");
       await eliminarDetalle(detailCollection, detailRef, idReturn);
     }
   } else {
@@ -35,22 +43,50 @@ export async function submit({
 
   // GUARDAR DETALLE
   if (detailCollection && detailRef) {
-    const campoDetalle = campos.find(c => c.use === "detailDatabase");
+    const campoDetalle = campos.find((c) => c.use === "detailDatabase");
 
     if (campoDetalle) {
-      const detalle = campoDetalle
-        ? formData[campoDetalle.key] ?? []
-        : [];
+      const detalleNuevo = formData[campoDetalle.key] ?? [];
+      const detalleOriginal = originalData[campoDetalle.key] ?? [];
 
-
-      for (const item of detalle) {
+      // NUEVOS Y MODIFICADOS
+      for (const item of detalleNuevo) {
         await agregar(detailCollection, {
           ...item,
           fecha: serverTimestamp(),
-          [detailRef]: idReturn
+          [detailRef]: idReturn,
         });
 
-        await actualizarProducto(item.idProducto, detailRef, item.cantidad, item.precio)
+        const original = detalleOriginal.find(
+          (d) => d.idProducto === item.idProducto,
+        );
+
+        const cantidadOriginal = original?.cantidad ?? 0;
+
+        await actualizarProducto(
+          item.idProducto,
+          detailRef,
+          item.cantidad,
+          cantidadOriginal,
+          item.precio,
+        );
+      }
+
+      // ELIMINADOS
+      for (const itemOriginal of detalleOriginal) {
+        const existe = detalleNuevo.some(
+          (d) => d.idProducto === itemOriginal.idProducto,
+        );
+
+        if (!existe) {
+          await actualizarProducto(
+            itemOriginal.idProducto,
+            detailRef,
+            0,
+            itemOriginal.cantidad,
+            itemOriginal.precio,
+          );
+        }
       }
     }
   }
@@ -60,4 +96,3 @@ export async function submit({
 
   return idReturn;
 }
-

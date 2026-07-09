@@ -17,6 +17,7 @@ export default function Form({
   detailRef = null,
 }) {
   const [formData, setFormData] = useState({});
+  const [originalData, setOriginalData] = useState({});
   const [saving, setSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -55,13 +56,14 @@ export default function Form({
         monto: total,
       }));
     }
-  }, [formData.detalleCompras, campos]);
+  }, [formData, campos]);
 
   useEffect(() => {
     if (!open) return;
 
     if (item) {
       setFormData(item);
+      setOriginalData(item); // estado inicial del elemento
     } else {
       const init = {};
 
@@ -103,6 +105,7 @@ export default function Form({
       await submit({
         collection,
         formData: mainData,
+        originalData: originalData,
         campos,
         idElemento: item?.id ?? null,
         onGuardar: onSave,

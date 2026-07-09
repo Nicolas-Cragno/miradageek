@@ -11,7 +11,6 @@ import {
   getDocs,
 } from "firebase/firestore";
 
-
 export async function agregar(coleccion, data) {
   try {
     const codigo = await generarCodigo(coleccion);
@@ -57,15 +56,12 @@ export async function eliminar(coleccion, id) {
 // operacionales (compras y ventas)
 export async function eliminarDetalle(coleccion, campoRef, idRef) {
   try {
-    const q = query(
-      collection(db, coleccion),
-      where(campoRef, "==", idRef)
-    );
+    const q = query(collection(db, coleccion), where(campoRef, "==", idRef));
 
     const snapshot = await getDocs(q);
 
     const detalles = snapshot.docs.map((d) =>
-      deleteDoc(doc(db, coleccion, d.id))
+      deleteDoc(doc(db, coleccion, d.id)),
     );
 
     await Promise.all(detalles);
@@ -76,7 +72,13 @@ export async function eliminarDetalle(coleccion, campoRef, idRef) {
     throw error;
   }
 }
-export async function actualizarProducto(idProducto, campoRef, cantidad, valor) {
+export async function actualizarProducto(
+  idProducto,
+  campoRef,
+  cantidad,
+  cantidadOriginal,
+  valor,
+) {
   try {
     const q = query(collection(db, "productos"), where("id", "==", idProducto));
 
@@ -97,29 +99,34 @@ export async function actualizarProducto(idProducto, campoRef, cantidad, valor) 
 
       let data = {};
 
+      const diferencia = calcularDiferencia(cantidadOriginal, cantidad);
+
       switch (campoRef) {
-        case "compra": nuevoStock += Number(cantidad);
+        case "compra":
+          nuevoStock += Number(diferencia);
           data = {
             stock: nuevoStock,
-            costo: Number(valor)
-          }; break;
-        case "venta": nuevoStock -= Number(cantidad);
+            costo: Number(valor),
+          };
+          break;
+        case "venta":
+          nuevoStock -= Number(diferencia);
 
           data = {
             stock: nuevoStock,
             precio: Number(valor),
-          }; break;
+          };
+          break;
         default:
           data = {
-            stock: nuevoStock
-          }
-      };
+            stock: nuevoStock,
+          };
+      }
 
       ts.update(productoRef, data);
     });
 
     return true;
-
   } catch (error) {
     console.error("[Error] Al actualizar producto:", error);
     throw error;
@@ -233,9 +240,11 @@ async function generarCodigo(coleccion) {
     });
 
     return (
-      config.prefijo +
-      serie +
-      String(siguiente).padStart(config.longitud, "0")
+      config.prefijo + serie + String(siguiente).padStart(config.longitud, "0")
     );
   });
 }
+
+const calcularDiferencia = (original, nuevo) => {
+  return Number(nuevo) - Number(original);
+};

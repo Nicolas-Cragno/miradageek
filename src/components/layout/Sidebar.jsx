@@ -41,6 +41,10 @@ export default function Sidebar({ open, setOpen }) {
           <ProviderLogo className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Compras</span>
         </NavLink>
+        <NavLink to="/ventas" className="nav-item">
+          <ProviderLogo className="nav-logo" />{" "}
+          <span className={`nav-text ${!open ? "hidden" : ""}`}>Ventas</span>
+        </NavLink>
       </nav>
     </div>
   );

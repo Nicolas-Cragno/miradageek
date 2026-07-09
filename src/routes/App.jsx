@@ -7,6 +7,7 @@ import Clientes from "../sections/Clientes";
 import Proveedores from "../sections/Proveedores";
 import Dashboard from "../sections/Dashboard";
 import Compras from "../sections/Compras";
+import Ventas from "../sections/Ventas";
 import "./css/App.css";
 
 export default function App() {
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/proveedores" element={<Proveedores />} />
           <Route path="/compras" element={<Compras />} />
+          <Route path="/ventas" element={<Ventas />} />
         </Route>
       </Routes>
     </BrowserRouter>

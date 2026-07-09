@@ -17,6 +17,8 @@ const colecciones = [
   // eventos
   "compras",
   "detalleCompras",
+  "ventas",
+  "detalleVentas",
 ];
 
 export function DataProvider({ children }) {

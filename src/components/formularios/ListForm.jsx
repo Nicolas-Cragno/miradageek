@@ -46,7 +46,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
 
     setProducto("");
     setCantidad(1);
-    setPrecio("");
+    setPrecio(0);
     //setMoneda("ARS");
   };
 
@@ -159,6 +159,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
                 <input
                   type="number"
                   min="1"
+                  step="0.01" // por las dudas para flotantes
                   value={item.cantidad}
                   onChange={(e) =>
                     actualizarCantidad(item.idProducto, e.target.value)
