@@ -34,7 +34,6 @@ export async function submit({
   if (idElemento) {
     await modificar(collection, idElemento, data);
     if (detailCollection && detailRef) {
-      console.log("elimnardetalle");
       await eliminarDetalle(detailCollection, detailRef, idReturn);
     }
   } else {
@@ -58,7 +57,7 @@ export async function submit({
         });
 
         const original = detalleOriginal.find(
-          (d) => d.idProducto === item.idProducto,
+          (d) => String(d.idProducto) === String(item.idProducto),
         );
 
         const cantidadOriginal = original?.cantidad ?? 0;
@@ -75,8 +74,9 @@ export async function submit({
       // ELIMINADOS
       for (const itemOriginal of detalleOriginal) {
         const existe = detalleNuevo.some(
-          (d) => d.idProducto === itemOriginal.idProducto,
+          (d) => String(d.idProducto) === String(itemOriginal.idProducto),
         );
+        console.log("[DEBUG item eliminado]", itemOriginal);
 
         if (!existe) {
           await actualizarProducto(

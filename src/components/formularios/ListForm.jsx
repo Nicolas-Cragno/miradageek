@@ -13,8 +13,13 @@ export default function ListForm({ productos = [], value = [], onChange }) {
     if (!producto) return;
 
     const prod = productos.find((p) => String(p.id) === String(producto));
-
     if (!prod) return;
+
+    const cantidadNum = Number(cantidad);
+    const precioNum = Number(precio);
+
+    if (!Number.isFinite(cantidadNum) || cantidadNum <= 0) return;
+    if (!Number.isFinite(precioNum) || precioNum < 0) return;
 
     const existente = listado.find(
       (x) => String(x.idProducto) === String(prod.id),
@@ -24,10 +29,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
       onChange(
         listado.map((item) =>
           item.idProducto === prod.id
-            ? {
-                ...item,
-                cantidad: item.cantidad + Number(cantidad),
-              }
+            ? { ...item, cantidad: item.cantidad + cantidadNum }
             : item,
         ),
       );
@@ -37,8 +39,8 @@ export default function ListForm({ productos = [], value = [], onChange }) {
         {
           idProducto: prod.id,
           descripcion: prod.descripcion || prod.nombre,
-          cantidad: Number(cantidad),
-          precio: Number(precio),
+          cantidad: cantidadNum,
+          precio: precioNum,
           moneda: moneda,
         },
       ]);
@@ -46,8 +48,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
 
     setProducto("");
     setCantidad(1);
-    setPrecio(0);
-    //setMoneda("ARS");
+    setPrecio(0); // ver nota abajo
   };
 
   const eliminarItem = (id) => {
@@ -60,17 +61,22 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   );
 
   const actualizarCantidad = (id, cantidad) => {
+    const num = Number(cantidad);
+    if (!Number.isFinite(num)) return; // ignorar estados intermedios que no son validos
+
     onChange(
       listado.map((item) =>
-        item.idProducto === id ? { ...item, cantidad: Number(cantidad) } : item,
+        item.idProducto === id ? { ...item, cantidad: num } : item,
       ),
     );
   };
 
   const actualizarPrecio = (id, precio) => {
+    const num = Number(precio);
+    if (!Number.isFinite(num)) return; // ignorar estados intermedios que no son validos
     onChange(
       listado.map((item) =>
-        item.idProducto === id ? { ...item, precio: Number(precio) } : item,
+        item.idProducto === id ? { ...item, precio: num } : item,
       ),
     );
   };
@@ -159,7 +165,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
                 <input
                   type="number"
                   min="1"
-                  step="0.01" // por las dudas para flotantes
+                  //step="0.01" // por las dudas para flotantes
                   value={item.cantidad}
                   onChange={(e) =>
                     actualizarCantidad(item.idProducto, e.target.value)
