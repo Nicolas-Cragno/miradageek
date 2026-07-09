@@ -9,6 +9,8 @@ import { FaCashRegister as SalesLogo } from "react-icons/fa";
 
 import { FaListAlt as BlackList } from "react-icons/fa";
 import { FaRegRectangleList as WhiteList } from "react-icons/fa6";
+import { FaCashRegister } from "react-icons/fa";
+import { IoCash } from "react-icons/io5";
 
 export const linksElements = [
   {
@@ -30,12 +32,12 @@ export const linksElements = [
 export const linksEvents = [
   {
     to: "/compras",
-    icon: <WhiteList className="nav-icon" size={50} />,
+    icon: <FaCashRegister className="nav-icon" size={50} />,
     label: "Compras",
   },
   {
     to: "/ventas",
-    icon: <BlackList className="nav-icon" size={50} />,
+    icon: <IoCash className="nav-icon" size={50} />,
     label: "Ventas",
   },
 ];

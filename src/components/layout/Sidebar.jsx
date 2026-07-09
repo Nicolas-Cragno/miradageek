@@ -4,6 +4,8 @@ import Logo from "../../assets/logos/Logo.png";
 import { GiBoxUnpacking as BoxLogo } from "react-icons/gi";
 import { IoPerson as CustomerLogo } from "react-icons/io5";
 import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
+import { FaCashRegister } from "react-icons/fa";
+import { IoCash } from "react-icons/io5";
 
 export default function Sidebar({ open, setOpen }) {
   return (
@@ -36,13 +38,13 @@ export default function Sidebar({ open, setOpen }) {
             Proveedores
           </span>
         </NavLink>
-        *
+        <br />
         <NavLink to="/compras" className="nav-item">
-          <ProviderLogo className="nav-logo" />{" "}
+          <FaCashRegister className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Compras</span>
         </NavLink>
         <NavLink to="/ventas" className="nav-item">
-          <ProviderLogo className="nav-logo" />{" "}
+          <IoCash className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Ventas</span>
         </NavLink>
       </nav>

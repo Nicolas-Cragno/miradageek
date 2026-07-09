@@ -79,17 +79,6 @@ export async function actualizarProducto(
   cantidadOriginal,
   valor,
 ) {
-  console.log("[DEBUG actualizarProducto]", {
-    idProducto,
-    campoRef,
-    cantidad,
-    tipoCantidad: typeof cantidad,
-    cantidadOriginal,
-    tipoCantidadOriginal: typeof cantidadOriginal,
-    valor,
-    tipoValor: typeof valor,
-  });
-
   try {
     const q = query(collection(db, "productos"), where("id", "==", idProducto));
 

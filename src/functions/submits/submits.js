@@ -76,7 +76,6 @@ export async function submit({
         const existe = detalleNuevo.some(
           (d) => String(d.idProducto) === String(itemOriginal.idProducto),
         );
-        console.log("[DEBUG item eliminado]", itemOriginal);
 
         if (!existe) {
           await actualizarProducto(
