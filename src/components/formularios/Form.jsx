@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiArrowLeft } from "react-icons/fi";
 import "./css/Form.css";
-import { submit } from "../../functions/submits/Submits";
+import { submit } from "../../functions/submits/submits";
 import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
 
@@ -19,6 +19,7 @@ export default function Form({
   const [formData, setFormData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function Form({
       campos
         .filter((c) => c.form)
         .forEach((c) => {
-          if (c.input === "list") {
+          if (c.input === "list" || c.input === "listStock") {
             init[c.key] = [];
           } else {
             init[c.key] = c.default ?? "";
@@ -93,6 +94,7 @@ export default function Form({
   async function handleSubmit(e) {
     e.preventDefault();
 
+    setSaveError("");
     setSaving(true);
 
     try {
@@ -113,6 +115,13 @@ export default function Form({
         detailCollection,
         detailRef,
       });
+    } catch (error) {
+      console.error("[Formulario] Error al guardar:", error);
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar. Intentá nuevamente.",
+      );
     } finally {
       setSaving(false);
     }
@@ -135,9 +144,11 @@ export default function Form({
         </div>
 
         <form onSubmit={handleSubmit}>
+          {saveError && <p className="form-error" role="alert">{saveError}</p>}
           <div className="form-grid">
             {camposForm.map((campo) => (
               <div
+                key={campo.key}
                 className={`form-group ${
                   campo.input === "list" || campo.input === "listStock"
                     ? "form-group-full"

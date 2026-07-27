@@ -80,17 +80,15 @@ export async function actualizarProducto(
   valor,
 ) {
   try {
-    const q = query(collection(db, "productos"), where("id", "==", idProducto));
-
-    const snapshot = await getDocs(q);
-
-    const producto = snapshot.docs[0];
-
-    const productoRef = doc(db, "productos", producto.id);
+    const productoRef = doc(db, "productos", idProducto);
 
     await runTransaction(db, async (ts) => {
       const pdSnap = await ts.get(productoRef);
-
+      if (!pdSnap.exists()) {
+        throw new Error(`No existe el producto ${idProducto}.`);
+      }
+      console.log("Existe producto:", pdSnap.exists());
+      console.log("Datos producto:", pdSnap.data());
       const pd = pdSnap.data();
 
       const stockActual = Number(pd.stock) || 0;
@@ -100,7 +98,13 @@ export async function actualizarProducto(
       let data = {};
 
       const diferencia = calcularDiferencia(cantidadOriginal, cantidad);
-
+      console.log("ACTUALIZAR STOCK:", {
+        idProducto,
+        campoRef,
+        cantidad,
+        cantidadOriginal,
+        valor,
+      });
       switch (campoRef) {
         case "compra":
           nuevoStock += Number(diferencia);
@@ -115,6 +119,14 @@ export async function actualizarProducto(
           data = {
             stock: nuevoStock,
             precio: Number(valor),
+          };
+          break;
+        case "stock":
+          if (!Number.isFinite(Number(cantidad))) {
+            throw new Error("El nuevo stock debe ser un número válido.");
+          }
+          data = {
+            stock: Number(cantidad),
           };
           break;
         default:

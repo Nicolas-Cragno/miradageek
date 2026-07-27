@@ -46,10 +46,13 @@ export async function submit({
 
     if (campoDetalle) {
       const detalleNuevo = formData[campoDetalle.key] ?? [];
+      console.log("DETALLE QUE VIENE DEL FORM:", detalleNuevo);
       const detalleOriginal = originalData[campoDetalle.key] ?? [];
 
       // NUEVOS Y MODIFICADOS
       for (const item of detalleNuevo) {
+        console.log("ITEM COMPLETO:", item);
+        console.log("CLAVES:", Object.keys(item));
         await agregar(detailCollection, {
           ...item,
           fecha: serverTimestamp(),
@@ -61,11 +64,16 @@ export async function submit({
         );
 
         const cantidadOriginal = original?.cantidad ?? 0;
-
-        if (detailRef === "ajusteStock") {
+        console.log("ITEM STOCK:", item);
+        console.log("DETALLE STOCK:", item);
+        if (detailRef === "stock") {
+          console.log("ITEM STOCK COMPLETO:", item);
+          console.log("ITEM:", item);
+          console.log("item.stockNuevo:", item.stockNuevo);
+          console.log("item.stockActual:", item.stockActual);
           await actualizarProducto(
             item.idProducto,
-            "ajusteStock",
+            "stock",
             item.stockNuevo,
             item.stockActual,
           );
@@ -81,7 +89,7 @@ export async function submit({
       }
 
       // ELIMINADOS
-      if (detailRef !== "ajusteStock") {
+      if (detailRef !== "stock") {
         for (const itemOriginal of detalleOriginal) {
           const existe = detalleNuevo.some(
             (d) => String(d.idProducto) === String(itemOriginal.idProducto),

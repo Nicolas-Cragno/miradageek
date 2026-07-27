@@ -58,6 +58,15 @@ form {
   padding: 24px;
 }
 
+.form-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
 .form-grid {
   display: grid;
 

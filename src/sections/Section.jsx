@@ -118,7 +118,7 @@ export default function Section({
           detailCollection={
             formType === "stock" ? "detalleStock" : detailCollection
           }
-          detailRef={detailRef}
+          detailRef={formType === "stock" ? "stock" : detailRef}
         />
       </>
     );
@@ -152,7 +152,7 @@ export default function Section({
             detailCollection={
               formType === "stock" ? "detalleStock" : detailCollection
             }
-            detailRef={detailRef}
+            detailRef={formType === "stock" ? "stock" : detailRef}
           />
         ) : (
           <>
@@ -180,7 +180,7 @@ export default function Section({
               detailCollection={
                 formType === "stock" ? "detalleStock" : detailCollection
               }
-              detailRef={detailRef}
+              detailRef={formType === "stock" ? "stock" : detailRef}
             />
           </>
         )}
