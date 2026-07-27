@@ -98,3 +98,27 @@
 .btn-add {
   width: 100%;
 }
+
+.stock-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.stock-actions input {
+  flex: 1;
+}
+
+.stock-actions button {
+  width: 140px;
+}
+
+.stock-up {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.stock-down {
+  color: #dc2626;
+  font-weight: 600;
+}

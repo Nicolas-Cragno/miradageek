@@ -16,6 +16,15 @@
     "use": "database"
   },
   {
+    "key": "marca",
+    "label": "Marca",
+    "tabla": true,
+    "ficha": true,
+    "form": true,
+    "input": "text",
+    "use": "database"
+  },
+  {
     "key": "costo",
     "label": "Costo",
     "ficha": false,

@@ -1,0 +1,65 @@
+[
+  {
+    "key": "id",
+    "label": "Identificador",
+    "tabla": true,
+    "ficha": true,
+    "form": true,
+    "input": "disabled"
+  },
+  {
+    "key": "label",
+    "label": "Ajuste de Stock",
+    "tabla": false,
+    "ficha": false,
+    "form": "true",
+    "input": "disabled"
+  },
+  {
+    "key": "fecha",
+    "label": "Fecha & Hora",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "datetime"
+  },
+  {
+    "key": "labelSucursal",
+    "label": "Sucursal",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "select",
+    "options": "sucursales",
+    "use": "database"
+  },
+  {
+    "key": "sucursal",
+    "label": "Sucursal",
+    "tabla": false,
+    "ficha": false,
+    "form": true,
+    "input": "select",
+    "options": "sucursales",
+    "use": "database"
+  },
+  {
+    "key": "detalle",
+    "label": "Detalle",
+    "ficha": true,
+    "form": true,
+    "input": "textarea",
+    "use": "database"
+  },
+
+  {
+    "key": "detalleStock",
+    "label": "Items",
+    "tabla": false,
+    "ficha": true,
+    "form": true,
+    "input": "listStock",
+    "options": "productos",
+    "use": "detailDatabase"
+  }
+]

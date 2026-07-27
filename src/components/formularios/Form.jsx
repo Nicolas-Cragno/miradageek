@@ -138,9 +138,10 @@ export default function Form({
           <div className="form-grid">
             {camposForm.map((campo) => (
               <div
-                key={campo.key}
                 className={`form-group ${
-                  campo.input === "list" ? "form-group-full" : ""
+                  campo.input === "list" || campo.input === "listStock"
+                    ? "form-group-full"
+                    : ""
                 }`}
               >
                 <InputForm

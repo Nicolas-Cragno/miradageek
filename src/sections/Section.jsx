@@ -4,10 +4,11 @@ import Tabla from "../components/tablas/Tabla";
 import Ficha from "../components/fichas/Ficha";
 import Form from "../components/formularios/Form";
 import { FiArrowLeft } from "react-icons/fi";
-
 import "./css/Sections.css";
 import LogoButton from "../components/buttons/LogoButton";
 import TextButton from "../components/buttons/TextButton";
+
+import camposStock from "../data/campos/camposStock.json";
 
 export default function Section({
   data = [],
@@ -17,8 +18,10 @@ export default function Section({
   FormComponent = Form,
   detailCollection = null,
   detailRef = null,
+  buttonStock = false,
 }) {
   const [selected, setSelected] = useState(null);
+  const [formType, setFormType] = useState("default");
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -35,12 +38,19 @@ export default function Section({
   }, []);
 
   function nuevo() {
+    setFormType("default");
     setEditingItem(null);
     setFormOpen(true);
 
-    if (isMobile) {
-      setView("form");
-    }
+    if (isMobile) setView("form");
+  }
+
+  function ajusteStock() {
+    setFormType("stock");
+    setEditingItem(null);
+    setFormOpen(true);
+
+    if (isMobile) setView("form");
   }
 
   function editar() {
@@ -75,6 +85,9 @@ export default function Section({
           <div className="section-list">
             <div className="section-header">
               <h1>{title}</h1>
+              {buttonStock && (
+                <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
+              )}
               <TextButton text={"+ Nuevo"} onClick={nuevo} />
             </div>
 
@@ -89,9 +102,15 @@ export default function Section({
         <FormComponent
           open={formOpen}
           item={editingItem}
-          campos={campos}
+          campos={formType === "stock" ? camposStock : campos}
           collection={collection}
-          title={editingItem ? `Editar ${title}` : `Nuevo ${title}`}
+          title={
+            formType === "stock"
+              ? "Ajuste de stock"
+              : editingItem
+                ? `Editar ${title}`
+                : `Nuevo ${title}`
+          }
           onClose={() => setFormOpen(false)}
           onSave={guardar}
           detailCollection={detailCollection}
@@ -115,13 +134,16 @@ export default function Section({
           <FormComponent
             open={formOpen}
             item={editingItem}
-            campos={campos}
+            campos={formType === "stock" ? camposStock : campos}
             collection={collection}
-            title={editingItem ? `Editar ${title}` : `Nuevo ${title}`}
-            onClose={() => {
-              setFormOpen(false);
-              setView("list");
-            }}
+            title={
+              formType === "stock"
+                ? "Ajuste de stock"
+                : editingItem
+                  ? `Editar ${title}`
+                  : `Nuevo ${title}`
+            }
+            onClose={() => setFormOpen(false)}
             onSave={guardar}
             detailCollection={detailCollection}
             detailRef={detailRef}
@@ -138,9 +160,15 @@ export default function Section({
             <FormComponent
               open={formOpen}
               item={editingItem}
-              campos={campos}
+              campos={formType === "stock" ? camposStock : campos}
               collection={collection}
-              title={editingItem ? `Editar ${title}` : `Nuevo ${title}`}
+              title={
+                formType === "stock"
+                  ? "Ajuste de stock"
+                  : editingItem
+                    ? `Editar ${title}`
+                    : `Nuevo ${title}`
+              }
               onClose={() => setFormOpen(false)}
               onSave={guardar}
               detailCollection={detailCollection}

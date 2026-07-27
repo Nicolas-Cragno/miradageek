@@ -11,6 +11,7 @@ export default function Productos() {
       campos={campos}
       title="Productos"
       collection="productos"
+      buttonStock={true}
     />
   );
 }

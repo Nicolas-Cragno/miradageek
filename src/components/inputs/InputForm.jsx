@@ -1,6 +1,7 @@
 import OptionsContent from "../formularios/OptionsContent";
 import { Timestamp } from "firebase/firestore";
 import ListForm from "../formularios/ListForm.jsx";
+import ListStockForm from "../formularios/ListStockForm.jsx";
 import { useData } from "../../context/DataContext.jsx";
 
 export default function InputForm({ campo, value, onChange }) {
@@ -49,6 +50,13 @@ export default function InputForm({ campo, value, onChange }) {
 
       {input === "list" && (
         <ListForm
+          productos={data[options] || []}
+          value={value ?? []}
+          onChange={(nuevoValor) => onChange(key, nuevoValor)}
+        />
+      )}
+      {input === "listStock" && (
+        <ListStockForm
           productos={data[options] || []}
           value={value ?? []}
           onChange={(nuevoValor) => onChange(key, nuevoValor)}
