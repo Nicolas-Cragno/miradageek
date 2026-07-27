@@ -183,6 +183,19 @@ const configuracionIds = {
     longitud: 8,
     maximo: 99999999,
   },
+
+  stock: {
+    // ST-A00000001
+    prefijo: "ST-",
+    longitud: 8,
+    maximo: 99999999,
+  },
+  detalleStock: {
+    // DS-A00000001
+    prefijo: "DS-",
+    longitud: 8,
+    maximo: 99999999,
+  },
 };
 
 function siguienteSerie(serie) {

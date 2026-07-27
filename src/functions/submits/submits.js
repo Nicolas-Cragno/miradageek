@@ -62,29 +62,40 @@ export async function submit({
 
         const cantidadOriginal = original?.cantidad ?? 0;
 
-        await actualizarProducto(
-          item.idProducto,
-          detailRef,
-          item.cantidad,
-          cantidadOriginal,
-          item.precio,
-        );
+        if (detailRef === "ajusteStock") {
+          await actualizarProducto(
+            item.idProducto,
+            "ajusteStock",
+            item.stockNuevo,
+            item.stockActual,
+          );
+        } else {
+          await actualizarProducto(
+            item.idProducto,
+            detailRef,
+            item.cantidad,
+            cantidadOriginal,
+            item.precio,
+          );
+        }
       }
 
       // ELIMINADOS
-      for (const itemOriginal of detalleOriginal) {
-        const existe = detalleNuevo.some(
-          (d) => String(d.idProducto) === String(itemOriginal.idProducto),
-        );
-
-        if (!existe) {
-          await actualizarProducto(
-            itemOriginal.idProducto,
-            detailRef,
-            0,
-            itemOriginal.cantidad,
-            itemOriginal.precio,
+      if (detailRef !== "ajusteStock") {
+        for (const itemOriginal of detalleOriginal) {
+          const existe = detalleNuevo.some(
+            (d) => String(d.idProducto) === String(itemOriginal.idProducto),
           );
+
+          if (!existe) {
+            await actualizarProducto(
+              itemOriginal.idProducto,
+              detailRef,
+              0,
+              itemOriginal.cantidad,
+              itemOriginal.precio,
+            );
+          }
         }
       }
     }

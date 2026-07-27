@@ -85,10 +85,12 @@ export default function Section({
           <div className="section-list">
             <div className="section-header">
               <h1>{title}</h1>
-              {buttonStock && (
-                <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
-              )}
-              <TextButton text={"+ Nuevo"} onClick={nuevo} />
+              <div className="section-header-buttons">
+                {buttonStock && (
+                  <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
+                )}
+                <TextButton text={"+ Nuevo"} onClick={nuevo} />
+              </div>
             </div>
 
             <Tabla data={data} campos={campos} onSelect={seleccionar} />
@@ -103,7 +105,7 @@ export default function Section({
           open={formOpen}
           item={editingItem}
           campos={formType === "stock" ? camposStock : campos}
-          collection={collection}
+          collection={formType === "stock" ? "stock" : collection}
           title={
             formType === "stock"
               ? "Ajuste de stock"
@@ -113,7 +115,9 @@ export default function Section({
           }
           onClose={() => setFormOpen(false)}
           onSave={guardar}
-          detailCollection={detailCollection}
+          detailCollection={
+            formType === "stock" ? "detalleStock" : detailCollection
+          }
           detailRef={detailRef}
         />
       </>
@@ -135,7 +139,7 @@ export default function Section({
             open={formOpen}
             item={editingItem}
             campos={formType === "stock" ? camposStock : campos}
-            collection={collection}
+            collection={formType === "stock" ? "stock" : collection}
             title={
               formType === "stock"
                 ? "Ajuste de stock"
@@ -145,7 +149,9 @@ export default function Section({
             }
             onClose={() => setFormOpen(false)}
             onSave={guardar}
-            detailCollection={detailCollection}
+            detailCollection={
+              formType === "stock" ? "detalleStock" : detailCollection
+            }
             detailRef={detailRef}
           />
         ) : (
@@ -161,7 +167,7 @@ export default function Section({
               open={formOpen}
               item={editingItem}
               campos={formType === "stock" ? camposStock : campos}
-              collection={collection}
+              collection={formType === "stock" ? "stock" : collection}
               title={
                 formType === "stock"
                   ? "Ajuste de stock"
@@ -171,7 +177,9 @@ export default function Section({
               }
               onClose={() => setFormOpen(false)}
               onSave={guardar}
-              detailCollection={detailCollection}
+              detailCollection={
+                formType === "stock" ? "detalleStock" : detailCollection
+              }
               detailRef={detailRef}
             />
           </>

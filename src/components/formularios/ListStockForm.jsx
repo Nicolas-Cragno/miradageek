@@ -69,10 +69,6 @@ export default function ListStockForm({
 
   return (
     <div className="listform">
-      <div className="listform-header">
-        <h3>Productos</h3>
-      </div>
-
       <div className="listform-add">
         <select
           value={producto}

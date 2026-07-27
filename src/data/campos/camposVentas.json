@@ -1,13 +1,5 @@
 [
   {
-    "key": "id",
-    "label": "Identificador",
-    "tabla": true,
-    "ficha": true,
-    "form": true,
-    "input": "disabled"
-  },
-  {
     "key": "label",
     "label": "Venta",
     "tabla": false,
