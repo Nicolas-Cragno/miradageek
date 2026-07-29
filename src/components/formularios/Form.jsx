@@ -159,6 +159,7 @@ export default function Form({
                   campo={campo}
                   value={formData[campo.key]}
                   onChange={handleChange}
+                  detailRef={detailRef}
                 />
               </div>
             ))}

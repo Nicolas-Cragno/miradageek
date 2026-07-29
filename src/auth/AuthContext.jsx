@@ -1,40 +1,46 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { login, logout, subscribeAuth } from "./authService";
 import { useData } from "../context/DataContext";
+import { login, logout, subscribeAuth } from "./authService";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const { usuarios } = useData();
-
+  const { usuarios = [], usuariosLoaded } = useData();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [firebaseUser, setFirebaseUser] = useState(undefined);
+  const [authResolved, setAuthResolved] = useState(false);
 
   useEffect(() => {
-    const unsub = subscribeAuth((firebaseUser) => {
-      if (!firebaseUser) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      const registrado = usuarios?.find((u) => u.uid === firebaseUser.uid);
-
-      if (!registrado || !registrado.estado) {
-        logout();
-        setUser(null);
-      } else {
-        setUser({
-          ...firebaseUser,
-          ...registrado,
-        });
-      }
-
-      setLoading(false);
+    const unsub = subscribeAuth((nextFirebaseUser) => {
+      setFirebaseUser(nextFirebaseUser);
+      setAuthResolved(true);
     });
 
     return () => unsub();
-  }, [usuarios]);
+  }, []);
+
+  useEffect(() => {
+    if (!authResolved) return;
+
+    if (!firebaseUser) {
+      setUser(null);
+      return;
+    }
+
+    if (!usuariosLoaded) return;
+
+    const registrado = usuarios.find((item) => item.uid === firebaseUser.uid);
+
+    if (!registrado || !registrado.estado) {
+      logout();
+      setUser(null);
+      return;
+    }
+
+    setUser({ ...firebaseUser, ...registrado });
+  }, [authResolved, firebaseUser, usuarios, usuariosLoaded]);
+
+  const loading = !authResolved || (Boolean(firebaseUser) && !usuariosLoaded);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>

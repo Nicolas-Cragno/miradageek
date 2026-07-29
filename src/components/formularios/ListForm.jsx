@@ -1,7 +1,12 @@
 import { useState } from "react";
 import "./css/ListForm.css";
 
-export default function ListForm({ productos = [], value = [], onChange }) {
+export default function ListForm({
+  productos = [],
+  value = [],
+  onChange,
+  tipoOperacion,
+}) {
   const listado = Array.isArray(value) ? value : [];
 
   const [producto, setProducto] = useState("");
@@ -28,7 +33,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
     if (existente) {
       onChange(
         listado.map((item) =>
-          item.idProducto === prod.id
+          String(item.idProducto) === String(prod.id)
             ? { ...item, cantidad: item.cantidad + cantidadNum }
             : item,
         ),
@@ -52,7 +57,7 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   };
 
   const eliminarItem = (id) => {
-    onChange(listado.filter((x) => x.idProducto !== id));
+    onChange(listado.filter((x) => String(x.idProducto) !== String(id)));
   };
 
   const total = listado.reduce(
@@ -62,21 +67,21 @@ export default function ListForm({ productos = [], value = [], onChange }) {
 
   const actualizarCantidad = (id, cantidad) => {
     const num = Number(cantidad);
-    if (!Number.isFinite(num)) return; // ignorar estados intermedios que no son validos
+    if (!Number.isFinite(num) || num <= 0) return;
 
     onChange(
       listado.map((item) =>
-        item.idProducto === id ? { ...item, cantidad: num } : item,
+        String(item.idProducto) === String(id) ? { ...item, cantidad: num } : item,
       ),
     );
   };
 
   const actualizarPrecio = (id, precio) => {
     const num = Number(precio);
-    if (!Number.isFinite(num)) return; // ignorar estados intermedios que no son validos
+    if (!Number.isFinite(num) || num < 0) return;
     onChange(
       listado.map((item) =>
-        item.idProducto === id ? { ...item, precio: num } : item,
+        String(item.idProducto) === String(id) ? { ...item, precio: num } : item,
       ),
     );
   };
@@ -84,7 +89,9 @@ export default function ListForm({ productos = [], value = [], onChange }) {
   return (
     <div className="listform">
       <div className="listform-header">
-        <h3>Detalle de compra</h3>
+        <h3>
+          {tipoOperacion === "venta" ? "Detalle de venta" : "Detalle de compra"}
+        </h3>
       </div>
 
       <div className="listform-add">
@@ -97,7 +104,15 @@ export default function ListForm({ productos = [], value = [], onChange }) {
             const prod = productos.find((p) => String(p.id) === String(id));
 
             if (prod) {
-              setPrecio(prod.precio || 0);
+              const precioProducto =
+                tipoOperacion === "compra" ? prod.costo : prod.precio;
+              const precioNumerico = Number(precioProducto);
+              setPrecio(Number.isFinite(precioNumerico) ? precioNumerico : 0);
+              setMoneda(
+                tipoOperacion === "compra"
+                  ? prod.monedaCosto || "ARS"
+                  : prod.monedaPrecio || "ARS",
+              );
             }
           }}
         >

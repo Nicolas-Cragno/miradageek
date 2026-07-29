@@ -4,7 +4,7 @@ import ListForm from "../formularios/ListForm.jsx";
 import ListStockForm from "../formularios/ListStockForm.jsx";
 import { useData } from "../../context/DataContext.jsx";
 
-export default function InputForm({ campo, value, onChange }) {
+export default function InputForm({ campo, value, onChange, detailRef }) {
   const { key, label, input = "text", options } = campo;
   const data = useData();
 
@@ -13,6 +13,10 @@ export default function InputForm({ campo, value, onChange }) {
 
     if (input === "date") {
       val = val ? Timestamp.fromDate(new Date(val)) : null;
+    }
+
+    if (input === "number") {
+      val = val === "" ? "" : Number(val);
     }
 
     onChange(key, val);
@@ -52,6 +56,7 @@ export default function InputForm({ campo, value, onChange }) {
         <ListForm
           productos={data[options] || []}
           value={value ?? []}
+          tipoOperacion={detailRef}
           onChange={(nuevoValor) => onChange(key, nuevoValor)}
         />
       )}

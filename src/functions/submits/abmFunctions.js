@@ -91,7 +91,8 @@ export async function actualizarProducto(
       console.log("Datos producto:", pdSnap.data());
       const pd = pdSnap.data();
 
-      const stockActual = Number(pd.stock) || 0;
+      const stockLeido = Number(pd.stock);
+      const stockActual = Number.isFinite(stockLeido) ? stockLeido : 0;
 
       let nuevoStock = stockActual;
 
@@ -115,6 +116,10 @@ export async function actualizarProducto(
           break;
         case "venta":
           nuevoStock -= Number(diferencia);
+
+          if (nuevoStock < 0) {
+            throw new Error("No hay stock suficiente para completar la venta.");
+          }
 
           data = {
             stock: nuevoStock,

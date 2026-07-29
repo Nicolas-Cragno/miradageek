@@ -1,20 +1,17 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { db } from "../firebase/firebaseConfig";
+import { createContext, useContext, useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
 
 const DataContext = createContext();
 
 const colecciones = [
-  // elementos
   "usuarios",
   "roles",
   "sucursales",
   "clientes",
-  "contadores",
   "productos",
   "proveedores",
   "tipos",
-  // eventos
   "compras",
   "detalleCompras",
   "ventas",
@@ -24,45 +21,56 @@ const colecciones = [
 export function DataProvider({ children }) {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const unsubs = [];
     const cargadas = new Set();
+    const marcarComoCargada = (nombreColeccion) => {
+      cargadas.add(nombreColeccion);
 
-    console.log("[Datos] Iniciando carga...");
+      if (cargadas.size === colecciones.length) {
+        setLoading(false);
+      }
+    };
 
-    colecciones.forEach((nombreColeccion) => {
-      const ref = collection(db, nombreColeccion);
+    const unsubs = colecciones.map((nombreColeccion) =>
+      onSnapshot(
+        collection(db, nombreColeccion),
+        (snapshot) => {
+          setData((prev) => ({
+            ...prev,
+            [nombreColeccion]: snapshot.docs.map((documento) => ({
+              id: documento.id,
+              ...documento.data(),
+            })),
+          }));
+          marcarComoCargada(nombreColeccion);
+        },
+        (snapshotError) => {
+          console.error(
+            `[Datos] Error cargando ${nombreColeccion}:`,
+            snapshotError,
+          );
+          setError(
+            "No se pudieron cargar todos los datos. Revisá tu conexión o permisos.",
+          );
+          marcarComoCargada(nombreColeccion);
+        },
+      ),
+    );
 
-      const unsub = onSnapshot(ref, (snapshot) => {
-        setData((prev) => ({
-          ...prev,
-          [nombreColeccion]: snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })),
-        }));
-
-        cargadas.add(nombreColeccion);
-
-        console.log(
-          `→ ${nombreColeccion} ✓ (${snapshot.docs.length} registros)`,
-        );
-
-        if (cargadas.size === colecciones.length) {
-          setLoading(false);
-          console.log("[Datos] Carga finalizada ✓");
-        }
-      });
-
-      unsubs.push(unsub);
-    });
-
-    return () => unsubs.forEach((fn) => fn());
+    return () => unsubs.forEach((unsub) => unsub());
   }, []);
 
   return (
-    <DataContext.Provider value={{ ...data, loading }}>
+    <DataContext.Provider
+      value={{
+        ...data,
+        loading,
+        error,
+        usuariosLoaded: Object.hasOwn(data, "usuarios"),
+      }}
+    >
       {children}
     </DataContext.Provider>
   );

@@ -53,7 +53,7 @@
     "key": "telefono",
     "label": "Telefono",
     "ficha": true,
-    "form": false,
+    "form": true,
     "input": "number",
     "use": "database"
   },
