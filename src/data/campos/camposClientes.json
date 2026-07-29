@@ -41,20 +41,11 @@
     "use": "database"
   },
   {
-    "key": "codigoArea",
-    "label": "Codigo de area",
-    "ficha": true,
-    "form": true,
-    "input": "select",
-    "options": "codigoArea",
-    "use": "database"
-  },
-  {
     "key": "telefono",
     "label": "Telefono",
     "ficha": true,
     "form": true,
-    "input": "number",
+    "input": "text",
     "use": "database"
   },
   {
