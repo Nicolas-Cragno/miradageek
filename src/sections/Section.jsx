@@ -55,7 +55,7 @@ export default function Section({
 
   function editar() {
     if (!selected) return;
-
+    setFormType("default");
     setEditingItem(selected);
     setFormOpen(true);
   }

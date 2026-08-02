@@ -21,8 +21,7 @@ export default function ListStockForm({
 
     if (!Number.isFinite(nuevo) || nuevo < 0) return;
 
-    const stockActual = Number(prod.stock);
-    const actual = Number.isFinite(stockActual) ? stockActual : 0;
+    const actual = Number(prod.stock || 0);
 
     const item = {
       idProducto: prod.id,
@@ -37,11 +36,7 @@ export default function ListStockForm({
     );
 
     if (existente) {
-      onChange(
-        listado.map((x) =>
-          String(x.idProducto) === String(prod.id) ? item : x,
-        ),
-      );
+      onChange(listado.map((x) => (x.idProducto === prod.id ? item : x)));
     } else {
       onChange([...listado, item]);
     }
@@ -51,7 +46,7 @@ export default function ListStockForm({
   };
 
   const eliminarItem = (id) => {
-    onChange(listado.filter((x) => String(x.idProducto) !== String(id)));
+    onChange(listado.filter((x) => x.idProducto !== id));
   };
 
   const actualizarStock = (id, valor) => {
@@ -61,7 +56,7 @@ export default function ListStockForm({
 
     onChange(
       listado.map((item) =>
-        String(item.idProducto) === String(id)
+        item.idProducto === id
           ? {
               ...item,
               stockNuevo: num,
@@ -85,8 +80,7 @@ export default function ListStockForm({
             const prod = productos.find((p) => String(p.id) === String(id));
 
             if (prod) {
-              const stockActual = Number(prod.stock);
-              setStockNuevo(Number.isFinite(stockActual) ? stockActual : 0);
+              setStockNuevo(prod.stock ?? 0);
             }
           }}
         >
