@@ -8,24 +8,26 @@ export function ProductosProvider({ children }) {
   const { productos = [], tipos = [] } = useData();
 
   const productosEnriquecidos = useMemo(() => {
-    return productos.map((pd) => {
-      const monedaCosto = monedas.find((mn) => mn.key === pd.monedaCosto);
+    return productos
+      .map((pd) => {
+        const monedaCosto = monedas.find((mn) => mn.key === pd.monedaCosto);
 
-      const monedaPrecio = monedas.find((mn) => mn.key === pd.monedaPrecio);
+        const monedaPrecio = monedas.find((mn) => mn.key === pd.monedaPrecio);
 
-      const tipo = tipos.find((tp) => tp.id === pd.tipo);
+        const tipo = tipos.find((tp) => tp.id === pd.tipo);
 
-      return {
-        ...pd,
+        return {
+          ...pd,
 
-        labelCosto: `${monedaCosto?.simbolo || "$"} ${pd.costo ?? 0}`,
-        labelPrecio: `${monedaPrecio?.simbolo || "$"} ${pd.precio ?? 0}`,
+          labelCosto: `${monedaCosto?.simbolo || "$"} ${pd.costo ?? 0}`,
+          labelPrecio: `${monedaPrecio?.simbolo || "$"} ${pd.precio ?? 0}`,
 
-        labelTipo: tipo
-          ? `${tipo.nombre} (${tipo.detalle})`
-          : "Sin especificar",
-      };
-    });
+          labelTipo: tipo
+            ? `${tipo.nombre} (${tipo.detalle})`
+            : "Sin especificar",
+        };
+      })
+      .sort((a, b) => a.descripcion.localeCompare(b.descripcion));
   }, [productos, tipos]);
 
   return (
