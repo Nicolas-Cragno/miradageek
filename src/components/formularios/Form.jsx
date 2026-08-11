@@ -4,6 +4,7 @@ import "./css/Form.css";
 import { submit } from "../../functions/submits/submits";
 import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
+import { showError, showSuccess } from "../../utils/alerts";
 
 export default function Form({
   open = false,
@@ -110,18 +111,21 @@ export default function Form({
         originalData: originalData,
         campos,
         idElemento: item?.id ?? null,
-        onGuardar: onSave,
-        onClose,
         detailCollection,
         detailRef,
       });
-    } catch (error) {
-      console.error("[Formulario] Error al guardar:", error);
-      setSaveError(
-        error instanceof Error
-          ? error.message
-          : "No se pudo guardar. Intentá nuevamente.",
+      await showSuccess(
+        item ? "Cambios guardados" : "Registro creado",
+        "La operación se completó correctamente.",
       );
+      onSave?.();
+      onClose?.();
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "No se pudo guardar. Intentá nuevamente.";
+      setSaveError(message);
+      await showError("No se pudo guardar", message);
     } finally {
       setSaving(false);
     }

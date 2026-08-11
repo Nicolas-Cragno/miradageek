@@ -1,0 +1,30 @@
+{
+  "score": 4,
+  "summary": "Prototype rules default-deny all unknown users, restrict access to the two current internal UIDs, protect user/role/reference records, validate business schemas on create and update, cap field sizes and numeric ranges, and keep detail records immutable. Deployment and emulator compilation remain pending because Firebase CLI is not authenticated and Java is unavailable.",
+  "findings": [
+    {
+      "check": "Public and unauthorized access",
+      "severity": "minor",
+      "issue": "No public or merely-authenticated read/write path was found; every permitted path also requires an explicitly allowlisted UID.",
+      "recommendation": "Keep default deny and remove UIDs immediately when access is revoked."
+    },
+    {
+      "check": "Update bypass and schema pollution",
+      "severity": "minor",
+      "issue": "Create and update call the same collection validator; identifiers are immutable and strings/numbers are bounded.",
+      "recommendation": "Add emulator-based regression tests before broad release."
+    },
+    {
+      "check": "Privilege separation",
+      "severity": "moderate",
+      "issue": "The two current internal UIDs are both treated as trusted writers because the legacy usuarios documents are not keyed by UID and rules cannot query by a field.",
+      "recommendation": "For future reader/operator roles, migrate authorization to custom claims or UID-keyed access documents managed by a privileged backend."
+    },
+    {
+      "check": "Business operation integrity",
+      "severity": "moderate",
+      "issue": "The client now performs headers, details, counters and stock changes atomically, but a compromised trusted writer account can still issue its own individually valid writes.",
+      "recommendation": "Move purchase, sale and stock mutations to a callable backend before granting access to less-trusted operators."
+    }
+  ]
+}

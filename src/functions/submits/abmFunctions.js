@@ -1,153 +1,174 @@
 import { db } from "../../firebase/firebaseConfig";
 import {
-  setDoc,
   doc,
-  updateDoc,
-  deleteDoc,
   runTransaction,
-  collection,
-  query,
-  where,
-  getDocs,
+  serverTimestamp,
 } from "firebase/firestore";
 
-export async function agregar(coleccion, data) {
-  try {
-    const codigo = await generarCodigo(coleccion);
+const detailInternalFields = new Set([
+  "id",
+  "label",
+  "labelProducto",
+  "stockActual",
+  "diferencia",
+]);
 
-    if (!codigo) {
-      throw new Error("[Error] No se pudo generar el código.");
+function cleanDetail(item) {
+  return Object.fromEntries(
+    Object.entries(item).filter(([key]) => !detailInternalFields.has(key)),
+  );
+}
+function codesFromCounter(collectionName, counterData, count) {
+  const config = configuracionIds[collectionName];
+  if (!config) throw new Error(`No existe configuración para ${collectionName}.`);
+
+  let { serie = "A", ultimo = 0 } = counterData;
+  const codes = [];
+
+  for (let index = 0; index < count; index += 1) {
+    ultimo += 1;
+    if (ultimo > config.maximo) {
+      serie = siguienteSerie(serie);
+      ultimo = 1;
+    }
+    codes.push(
+      config.prefijo + serie + String(ultimo).padStart(config.longitud, "0"),
+    );
+  }
+
+  return { codes, nextCounter: { serie, ultimo } };
+}
+
+export async function guardarOperacion({
+  collection: collectionName,
+  data,
+  idElemento = null,
+  detailCollection = null,
+  detailRef = null,
+  detalleNuevo = [],
+  detalleOriginal = [],
+}) {
+  return runTransaction(db, async (transaction) => {
+    const mainCounterRef = idElemento
+      ? null
+      : doc(db, "contadores", collectionName);
+    const detailCounterRef = detailCollection
+      ? doc(db, "contadores", detailCollection)
+      : null;
+
+    const mainCounterSnap = mainCounterRef
+      ? await transaction.get(mainCounterRef)
+      : null;
+    const detailCounterSnap = detailCounterRef
+      ? await transaction.get(detailCounterRef)
+      : null;
+
+    if (mainCounterRef && !mainCounterSnap.exists()) {
+      throw new Error(`No existe el contador ${collectionName}.`);
+    }
+    if (detailCounterRef && !detailCounterSnap.exists()) {
+      throw new Error(`No existe el contador ${detailCollection}.`);
     }
 
-    const ref = doc(db, coleccion, codigo);
-    await setDoc(ref, data);
+    const productIds = [
+      ...new Set(
+        [...detalleNuevo, ...detalleOriginal]
+          .map((item) => item.idProducto)
+          .filter(Boolean),
+      ),
+    ];
+    const productSnapshots = new Map();
 
-    return codigo;
-  } catch (error) {
-    console.error("[Firestore] Error agregando:", error);
-    throw error;
-  }
-}
-export async function modificar(coleccion, id, data) {
-  try {
-    const ref = doc(db, coleccion, id);
-
-    await updateDoc(ref, data);
-
-    return true;
-  } catch (error) {
-    console.error("[Firestore] Error modificando:", error);
-    throw error;
-  }
-}
-export async function eliminar(coleccion, id) {
-  try {
-    const ref = doc(db, coleccion, id);
-
-    await deleteDoc(ref);
-
-    return true;
-  } catch (error) {
-    console.error("[Firestore] Error eliminando:", error);
-    throw error;
-  }
-}
-
-// operacionales (compras y ventas)
-export async function eliminarDetalle(coleccion, campoRef, idRef) {
-  try {
-    const q = query(collection(db, coleccion), where(campoRef, "==", idRef));
-
-    const snapshot = await getDocs(q);
-
-    const detalles = snapshot.docs.map((d) =>
-      deleteDoc(doc(db, coleccion, d.id)),
-    );
-
-    await Promise.all(detalles);
-
-    return true;
-  } catch (error) {
-    console.error("[Error] Eliminando detalle:", error);
-    throw error;
-  }
-}
-export async function actualizarProducto(
-  idProducto,
-  campoRef,
-  cantidad,
-  cantidadOriginal,
-  valor,
-) {
-  try {
-    const productoRef = doc(db, "productos", idProducto);
-
-    await runTransaction(db, async (ts) => {
-      const pdSnap = await ts.get(productoRef);
-      if (!pdSnap.exists()) {
-        throw new Error(`No existe el producto ${idProducto}.`);
+    for (const productId of productIds) {
+      const productRef = doc(db, "productos", productId);
+      const snapshot = await transaction.get(productRef);
+      if (!snapshot.exists()) {
+        throw new Error(`No existe el producto ${productId}.`);
       }
-      console.log("Existe producto:", pdSnap.exists());
-      console.log("Datos producto:", pdSnap.data());
-      const pd = pdSnap.data();
+      productSnapshots.set(productId, { ref: productRef, data: snapshot.data() });
+    }
 
-      const stockLeido = Number(pd.stock);
-      const stockActual = Number.isFinite(stockLeido) ? stockLeido : 0;
+    let operationId = idElemento;
+    if (mainCounterRef) {
+      const allocation = codesFromCounter(
+        collectionName,
+        mainCounterSnap.data(),
+        1,
+      );
+      [operationId] = allocation.codes;
+      transaction.update(mainCounterRef, allocation.nextCounter);
+    }
 
-      let nuevoStock = stockActual;
+    const operationRef = doc(db, collectionName, operationId);
+    if (idElemento) transaction.update(operationRef, data);
+    else transaction.set(operationRef, data);
 
-      let data = {};
+    for (const previousDetail of detalleOriginal) {
+      if (previousDetail.id && detailCollection) {
+        transaction.delete(doc(db, detailCollection, previousDetail.id));
+      }
+    }
 
-      const diferencia = calcularDiferencia(cantidadOriginal, cantidad);
-      console.log("ACTUALIZAR STOCK:", {
-        idProducto,
-        campoRef,
-        cantidad,
-        cantidadOriginal,
-        valor,
+    if (detailCounterRef) {
+      const allocation = codesFromCounter(
+        detailCollection,
+        detailCounterSnap.data(),
+        detalleNuevo.length,
+      );
+      transaction.update(detailCounterRef, allocation.nextCounter);
+
+      detalleNuevo.forEach((item, index) => {
+        transaction.set(doc(db, detailCollection, allocation.codes[index]), {
+          ...cleanDetail(item),
+          fecha: serverTimestamp(),
+          [detailRef]: operationId,
+        });
       });
-      switch (campoRef) {
-        case "compra":
-          nuevoStock += Number(diferencia);
-          data = {
-            stock: nuevoStock,
-            costo: Number(valor),
-          };
-          break;
-        case "venta":
-          nuevoStock -= Number(diferencia);
+    }
 
-          if (nuevoStock < 0) {
-            throw new Error("No hay stock suficiente para completar la venta.");
-          }
+    for (const productId of productIds) {
+      const product = productSnapshots.get(productId);
+      const nextItem = detalleNuevo.find(
+        (item) => String(item.idProducto) === String(productId),
+      );
+      const previousItem = detalleOriginal.find(
+        (item) => String(item.idProducto) === String(productId),
+      );
+      const currentStock = Number(product.data.stock) || 0;
+      let update;
 
-          data = {
-            stock: nuevoStock,
-            precio: Number(valor),
-          };
-          break;
-        case "stock":
-          if (!Number.isFinite(Number(cantidad))) {
-            throw new Error("El nuevo stock debe ser un número válido.");
-          }
-          data = {
-            stock: Number(cantidad),
-          };
-          break;
-        default:
-          data = {
-            stock: nuevoStock,
-          };
+      if (detailRef === "stock") {
+        if (!nextItem) continue;
+        const nextStock = Number(nextItem.stockNuevo);
+        if (!Number.isFinite(nextStock) || nextStock < 0) {
+          throw new Error("El nuevo stock debe ser un número válido.");
+        }
+        update = { stock: nextStock };
+      } else {
+        const difference =
+          Number(nextItem?.cantidad ?? 0) - Number(previousItem?.cantidad ?? 0);
+        const nextStock =
+          detailRef === "venta"
+            ? currentStock - difference
+            : currentStock + difference;
+
+        if (!Number.isFinite(nextStock) || nextStock < 0) {
+          throw new Error("No hay stock suficiente para completar la venta.");
+        }
+
+        update = { stock: nextStock };
+        if (nextItem) {
+          update[detailRef === "venta" ? "precio" : "costo"] = Number(
+            nextItem.precio,
+          );
+        }
       }
 
-      ts.update(productoRef, data);
-    });
+      transaction.update(product.ref, update);
+    }
 
-    return true;
-  } catch (error) {
-    console.error("[Error] Al actualizar producto:", error);
-    throw error;
-  }
+    return operationId;
+  });
 }
 
 // generacion de codigos
@@ -239,42 +260,3 @@ function siguienteSerie(serie) {
 
   return arr.join("");
 }
-
-async function generarCodigo(coleccion) {
-  const config = configuracionIds[coleccion];
-
-  if (!config) return null;
-
-  return runTransaction(db, async (transaction) => {
-    const contadorRef = doc(db, "contadores", coleccion);
-
-    const contadorSnap = await transaction.get(contadorRef);
-
-    if (!contadorSnap.exists()) {
-      throw new Error(`[Error] No existe el contador ${coleccion}`);
-    }
-
-    let { serie = "A", ultimo = 0 } = contadorSnap.data();
-
-    let siguiente = ultimo + 1;
-
-    if (siguiente > config.maximo) {
-      serie = siguienteSerie(serie);
-      siguiente = 1;
-    }
-
-    // para evitar duplicados se actualizan primero los contadores
-    transaction.update(contadorRef, {
-      serie,
-      ultimo: siguiente,
-    });
-
-    return (
-      config.prefijo + serie + String(siguiente).padStart(config.longitud, "0")
-    );
-  });
-}
-
-const calcularDiferencia = (original, nuevo) => {
-  return Number(nuevo) - Number(original);
-};

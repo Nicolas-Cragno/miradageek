@@ -1,4 +1,4 @@
-import Logo from "../assets/logos/Logo.png";
+import Logo from "../assets/logos/LOGO.png";
 import "./css/Loading.css";
 
 const Loading = () => {

@@ -1,9 +1,6 @@
 import { NavLink } from "react-router-dom";
 import "./css/Lowbar.css";
-import Logo from "../../assets/logos/Logo.png";
-import { GiBoxUnpacking as BoxLogo } from "react-icons/gi";
-import { IoPerson as CustomerLogo } from "react-icons/io5";
-import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
+import Logo from "../../assets/logos/LOGO.png";
 import { GrApps as ElementsLogo } from "react-icons/gr";
 import { FaCalendarCheck as EventLogo } from "react-icons/fa6";
 

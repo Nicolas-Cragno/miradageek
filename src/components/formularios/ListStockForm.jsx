@@ -1,5 +1,9 @@
 import { useState } from "react";
 import "./css/ListForm.css";
+import SearchableSelect from "../inputs/SearchableSelect";
+
+const productLabel = (product) =>
+  `${product.descripcion || product.nombre || product.id} (Stock: ${product.stock ?? 0})`;
 
 export default function ListStockForm({
   productos = [],
@@ -70,10 +74,12 @@ export default function ListStockForm({
   return (
     <div className="listform">
       <div className="listform-add">
-        <select
+        <SearchableSelect
+          options={productos}
           value={producto}
-          onChange={(e) => {
-            const id = e.target.value;
+          placeholder="Buscar producto..."
+          getLabel={productLabel}
+          onChange={(id) => {
 
             setProducto(id);
 
@@ -83,15 +89,7 @@ export default function ListStockForm({
               setStockNuevo(prod.stock ?? 0);
             }
           }}
-        >
-          <option value="">Seleccionar producto...</option>
-
-          {productos.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.descripcion || p.nombre} (Stock: {p.stock ?? 0})
-            </option>
-          ))}
-        </select>
+        />
 
         <div className="stock-actions">
           <input

@@ -33,7 +33,7 @@ export const formatearCampoFirestore = (valor) => {
 
     if (Array.isArray(valor)) {
         return valor
-            .map((item, index) => `→ ${formatearCampoFirestore(item)}`)
+            .map((item) => `→ ${formatearCampoFirestore(item)}`)
             .join("\n");
     }
 

@@ -1,4 +1,4 @@
-import Logo from "../../assets/logos/Logo.png";
+import Logo from "../../assets/logos/LOGO.png";
 import { formatearCampoFirestore } from "../../functions/DataFunctions";
 import TextButton from "../buttons/TextButton";
 import "./css/Ficha.css";

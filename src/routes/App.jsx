@@ -9,6 +9,7 @@ import Dashboard from "../sections/Dashboard";
 import Compras from "../sections/Compras";
 import Ventas from "../sections/Ventas";
 import "./css/App.css";
+import NotFound from "./NotFound";
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/compras" element={<Compras />} />
           <Route path="/ventas" element={<Ventas />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useData } from "../context/DataContext";
 import Section from "./Section";
 import campos from "../data/campos/camposClientes.json";

@@ -5,7 +5,6 @@ import Ficha from "../components/fichas/Ficha";
 import Form from "../components/formularios/Form";
 import { FiArrowLeft } from "react-icons/fi";
 import "./css/Sections.css";
-import LogoButton from "../components/buttons/LogoButton";
 import TextButton from "../components/buttons/TextButton";
 
 import camposStock from "../data/campos/camposStock.json";
@@ -68,9 +67,7 @@ export default function Section({
     }
   };
 
-  async function guardar(item) {
-    console.log(item);
-
+  function guardar() {
     setFormOpen(false);
   }
 

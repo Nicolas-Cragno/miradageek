@@ -1,5 +1,5 @@
 import "./css/Dashboard.css";
-import logo from "../assets/logos/Logo.png";
+import logo from "../assets/logos/LOGO.png";
 import { useAuth } from "../auth/AuthContext";
 
 const Dashboard = () => {

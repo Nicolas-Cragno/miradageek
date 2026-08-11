@@ -1,4 +1,3 @@
-import { useData } from "../context/DataContext";
 import { useVentas } from "../context/VentasContext";
 import Section from "./Section";
 import campos from "../data/campos/camposVentas.json";

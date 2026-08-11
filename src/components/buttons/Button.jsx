@@ -1,5 +1,4 @@
 import "./css/Buttons.css";
-import { FaPlusCircle } from "react-icons/fa";
 
 const Button = ({
   text = "",

@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import Lowbar from "./Lowbar";
 import { Outlet } from "react-router-dom";
 import "./css/Layout.css";
+import DataLayer from "../../context/DataLayer";
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -26,7 +27,9 @@ export default function Layout() {
       {!isMobile && <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />}
 
       <div className={`layout-content ${sidebarOpen ? "open" : "closed"}`}>
-        <Outlet />
+        <DataLayer>
+          <Outlet />
+        </DataLayer>
       </div>
 
       {isMobile && <Lowbar />}

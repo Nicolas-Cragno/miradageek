@@ -1,0 +1,228 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Assumed data model:
+    // usuarios: uid, nombre, tipo, mail, estado (client read-only).
+    // clientes/proveedores: party/contact fields.
+    // productos: description, prices, currencies, type and non-negative stock.
+    // compras/ventas/stock: operation header with timestamp and references.
+    // detalle*: immutable operation lines referencing products and their parent.
+    // contadores: immutable id plus series/last-number state.
+    // Acceso cerrado a los UID internos actuales. Para incorporar personal,
+    // agregar su UID aquí después de crearlo en Firebase Authentication.
+    function isAuthorized() {
+      return request.auth != null && request.auth.uid in [
+        'ubPTOp82a5ahTMAcX6ZhUaBRZEL2',
+        'qgN6KgzqAwNRPKXTsTtI4QyVrPY2'
+      ];
+    }
+
+    function validText(field, maxLength) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() <= maxLength);
+    }
+
+    function validOptionalNumber(field, minValue, maxValue) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
+        (request.resource.data[field] is number &&
+         request.resource.data[field] >= minValue &&
+         request.resource.data[field] <= maxValue);
+    }
+
+    function validTimestamp(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] is timestamp;
+    }
+
+    function validParty() {
+      return request.resource.data.keys().hasAll(['nombre']) &&
+        request.resource.data.keys().hasOnly([
+          'id', 'nombre', 'direccion', 'localidad', 'contacto', 'telefono', 'cuit',
+          'razonSocial', 'detalle', 'codArea', 'mail', 'cuentaCorriente', 'fecha'
+        ]) &&
+        validText('id', 80) && validText('nombre', 160) && validText('direccion', 300) &&
+        validText('localidad', 120) && validText('contacto', 160) &&
+        validText('telefono', 40) && validText('razonSocial', 200) &&
+        validText('detalle', 3000) && validText('codArea', 10) &&
+        validText('mail', 254) && validText('cuentaCorriente', 500) &&
+        validOptionalNumber('cuit', 0, 999999999999) && validTimestamp('fecha');
+    }
+
+    function validProduct() {
+      return request.resource.data.keys().hasAll(['descripcion']) &&
+        request.resource.data.keys().hasOnly([
+          'id', 'descripcion', 'marca', 'tipo', 'costo', 'precio', 'stock',
+          'monedaCosto', 'monedaPrecio', 'imagen', 'fecha'
+        ]) &&
+        validText('id', 80) && validText('descripcion', 500) && validText('marca', 160) &&
+        validText('tipo', 40) && validText('monedaCosto', 20) &&
+        validText('monedaPrecio', 20) && validText('imagen', 2000) &&
+        validOptionalNumber('costo', 0, 999999999999) &&
+        validOptionalNumber('precio', 0, 999999999999) &&
+        validOptionalNumber('stock', 0, 999999999) && validTimestamp('fecha');
+    }
+
+    function validOperation(referenceField) {
+      return request.resource.data.keys().hasAll(['sucursal', 'monto']) &&
+        referenceField in request.resource.data &&
+        request.resource.data.keys().hasOnly([
+          'id', 'sucursal', referenceField, 'monto', 'detalle', 'datalle',
+          'fecha', 'estado', 'moneda'
+        ]) &&
+        validText('id', 80) && validText('sucursal', 80) && validText(referenceField, 80) &&
+        validText('detalle', 3000) && validText('datalle', 3000) && validText('estado', 40) &&
+        validText('moneda', 20) &&
+        validOptionalNumber('monto', 0, 999999999999) && validTimestamp('fecha');
+    }
+
+    function validStockOperation() {
+      return request.resource.data.keys().hasAll(['sucursal']) &&
+        request.resource.data.keys().hasOnly(['id', 'sucursal', 'detalle', 'fecha']) &&
+        validText('id', 80) && validText('sucursal', 80) && validText('detalle', 3000) &&
+        validTimestamp('fecha');
+    }
+
+    function validDetail(parentField) {
+      return request.resource.data.keys().hasAll([
+        parentField, 'idProducto', 'cantidad', 'precio'
+      ]) &&
+        request.resource.data.keys().hasOnly([
+          parentField, 'idProducto', 'cantidad', 'precio', 'moneda',
+          'descripcion', 'detalle', 'fecha'
+        ]) &&
+        validText(parentField, 80) && validText('idProducto', 80) &&
+        validText('moneda', 20) && validText('descripcion', 500) &&
+        validText('detalle', 1000) &&
+        validOptionalNumber('cantidad', 0.000001, 999999999) &&
+        validOptionalNumber('precio', 0, 999999999999) && validTimestamp('fecha');
+    }
+
+    function validStockDetail() {
+      return request.resource.data.keys().hasAll(['stock', 'idProducto', 'stockNuevo']) &&
+        request.resource.data.keys().hasOnly([
+          'stock', 'idProducto', 'stockNuevo', 'descripcion', 'fecha'
+        ]) &&
+        validText('stock', 80) && validText('idProducto', 80) &&
+        validText('descripcion', 500) &&
+        validOptionalNumber('stockNuevo', 0, 999999999) && validTimestamp('fecha');
+    }
+
+    match /usuarios/{userId} {
+      allow get, list: if isAuthorized() && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /{collectionName}/{documentId} {
+      allow read: if isAuthorized() && collectionName in [
+        'roles', 'sucursales', 'tipos'
+      ];
+      allow write: if false;
+    }
+
+    match /clientes/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validParty() &&
+        (!('id' in request.resource.data) || request.resource.data.id == documentId);
+      allow update: if isAuthorized() && validParty() &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+      allow delete: if isAuthorized();
+    }
+
+    match /proveedores/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validParty() &&
+        (!('id' in request.resource.data) || request.resource.data.id == documentId);
+      allow update: if isAuthorized() && validParty() &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+      allow delete: if isAuthorized();
+    }
+
+    match /productos/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validProduct() &&
+        (!('id' in request.resource.data) || request.resource.data.id == documentId);
+      allow update: if isAuthorized() && validProduct() &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+      allow delete: if isAuthorized();
+    }
+
+    match /compras/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validOperation('proveedor') &&
+        (!('id' in request.resource.data) || request.resource.data.id == documentId);
+      allow update: if isAuthorized() && validOperation('proveedor') &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+      allow delete: if isAuthorized();
+    }
+
+    match /ventas/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validOperation('cliente') &&
+        (!('id' in request.resource.data) || request.resource.data.id == documentId);
+      allow update: if isAuthorized() && validOperation('cliente') &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+      allow delete: if isAuthorized();
+    }
+
+    match /stock/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validStockOperation() &&
+        (!('id' in request.resource.data) || request.resource.data.id == documentId);
+      allow update: if isAuthorized() && validStockOperation() &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+      allow delete: if isAuthorized();
+    }
+
+    match /detalleCompras/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validDetail('compra');
+      allow update: if false;
+      allow delete: if isAuthorized();
+    }
+
+    match /detalleVentas/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validDetail('venta');
+      allow update: if false;
+      allow delete: if isAuthorized();
+    }
+
+    match /detalleStock/{documentId} {
+      allow read: if isAuthorized();
+      allow create: if isAuthorized() && validStockDetail();
+      allow update: if false;
+      allow delete: if isAuthorized();
+    }
+
+    match /contadores/{counterId} {
+      allow read: if isAuthorized();
+      allow create, delete: if false;
+      allow update: if isAuthorized() &&
+        request.resource.data.keys().hasOnly(['id', 'serie', 'ultimo']) &&
+        validText('id', 80) &&
+        (!('id' in resource.data) || request.resource.data.id == resource.data.id) &&
+        request.resource.data.serie is string &&
+        request.resource.data.serie.matches('^[A-Z]{1,10}$') &&
+        request.resource.data.ultimo is int &&
+        request.resource.data.ultimo >= 0 &&
+        request.resource.data.ultimo <= 99999999 &&
+        (
+          (request.resource.data.serie == resource.data.get('serie', 'A') &&
+           request.resource.data.ultimo >= resource.data.ultimo &&
+           request.resource.data.ultimo <= resource.data.ultimo + 500) ||
+          (request.resource.data.serie != resource.data.get('serie', 'A') &&
+           request.resource.data.ultimo >= 1 &&
+           request.resource.data.ultimo <= 500)
+        ) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['serie', 'ultimo']);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

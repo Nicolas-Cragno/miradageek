@@ -1,6 +1,5 @@
 import { createContext, useContext, useMemo } from "react";
 import { useData } from "./DataContext";
-import { formatearCampoFirestore } from "../functions/DataFunctions";
 
 const DetalleComprasContext = createContext();
 

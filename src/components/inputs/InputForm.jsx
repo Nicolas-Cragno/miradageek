@@ -1,8 +1,8 @@
-import OptionsContent from "../formularios/OptionsContent";
 import { Timestamp } from "firebase/firestore";
 import ListForm from "../formularios/ListForm.jsx";
 import ListStockForm from "../formularios/ListStockForm.jsx";
 import { useData } from "../../context/DataContext.jsx";
+import SearchableSelect from "./SearchableSelect.jsx";
 
 export default function InputForm({ campo, value, onChange, detailRef }) {
   const { key, label, input = "text", options } = campo;
@@ -35,9 +35,12 @@ export default function InputForm({ campo, value, onChange, detailRef }) {
       )}
 
       {input === "select" && (
-        <select value={value ?? ""} onChange={handleChange}>
-          <OptionsContent options={options} />
-        </select>
+        <SearchableSelect
+          options={data[options] || []}
+          value={value ?? ""}
+          placeholder={`Buscar ${label.toLocaleLowerCase("es")}...`}
+          onChange={(newValue) => onChange(key, newValue)}
+        />
       )}
 
       {input === "date" && (
