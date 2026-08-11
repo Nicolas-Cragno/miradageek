@@ -114,6 +114,9 @@ export default function Form({
         detailCollection,
         detailRef,
       });
+
+      setSaving(false);
+
       await showSuccess(
         item ? "Cambios guardados" : "Registro creado",
         "La operación se completó correctamente.",
@@ -121,13 +124,14 @@ export default function Form({
       onSave?.();
       onClose?.();
     } catch (error) {
-      const message = error instanceof Error
-        ? error.message
-        : "No se pudo guardar. Intentá nuevamente.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar. Intentá nuevamente.";
       setSaveError(message);
-      await showError("No se pudo guardar", message);
-    } finally {
+
       setSaving(false);
+      await showError("No se pudo guardar", message);
     }
   }
 
@@ -148,7 +152,11 @@ export default function Form({
         </div>
 
         <form onSubmit={handleSubmit}>
-          {saveError && <p className="form-error" role="alert">{saveError}</p>}
+          {saveError && (
+            <p className="form-error" role="alert">
+              {saveError}
+            </p>
+          )}
           <div className="form-grid">
             {camposForm.map((campo) => (
               <div

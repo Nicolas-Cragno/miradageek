@@ -5,7 +5,8 @@
     "tabla": true,
     "ficha": true,
     "form": false,
-    "input": "datetime"
+    "input": "datetime",
+    "dato" : "timestamp"
   },
 
   {
@@ -16,7 +17,8 @@
     "form": false,
     "input": "select",
     "options": "sucursales",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "idProducto",
@@ -26,7 +28,8 @@
     "form": true,
     "input": "select",
     "options": "productos",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "cantidad",
@@ -35,6 +38,7 @@
     "ficha": true,
     "form": true,
     "input": "number",
-    "use": "database"
+    "use": "database",
+    "dato" : "number"
   }
 ]

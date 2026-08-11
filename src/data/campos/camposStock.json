@@ -5,7 +5,8 @@
     "tabla": true,
     "ficha": true,
     "form": true,
-    "input": "disabled"
+    "input": "disabled",
+    "dato" : "string"
   },
   {
     "key": "label",
@@ -13,7 +14,8 @@
     "tabla": false,
     "ficha": false,
     "form": "true",
-    "input": "disabled"
+    "input": "disabled",
+    "dato" : "string"
   },
   {
     "key": "fecha",
@@ -21,7 +23,8 @@
     "tabla": true,
     "ficha": true,
     "form": false,
-    "input": "datetime"
+    "input": "datetime",
+    "dato" : "timestamp"
   },
   {
     "key": "labelSucursal",
@@ -31,7 +34,8 @@
     "form": false,
     "input": "select",
     "options": "sucursales",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "sucursal",
@@ -41,7 +45,8 @@
     "form": true,
     "input": "select",
     "options": "sucursales",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "detalle",
@@ -49,7 +54,8 @@
     "ficha": true,
     "form": true,
     "input": "textarea",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
 
   {
@@ -60,6 +66,7 @@
     "form": true,
     "input": "listStock",
     "options": "productos",
-    "use": "detailDatabase"
+    "use": "detailDatabase",
+    "dato" : "string"
   }
 ]

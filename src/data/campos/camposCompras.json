@@ -5,7 +5,8 @@
     "tabla": true,
     "ficha": true,
     "form": true,
-    "input": "disabled"
+    "input": "disabled",
+    "dato": "string"
   },
   {
     "key": "label",
@@ -13,7 +14,8 @@
     "tabla": false,
     "ficha": false,
     "form": "true",
-    "input": "disabled"
+    "input": "disabled",
+    "dato": "string"
   },
   {
     "key": "fecha",
@@ -21,7 +23,8 @@
     "tabla": true,
     "ficha": true,
     "form": false,
-    "input": "datetime"
+    "input": "datetime",
+    "dato": "timestamp"
   },
   {
     "key": "labelSucursal",
@@ -31,7 +34,8 @@
     "form": false,
     "input": "select",
     "options": "sucursales",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "sucursal",
@@ -41,7 +45,8 @@
     "form": true,
     "input": "select",
     "options": "sucursales",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "labelProveedor",
@@ -51,7 +56,8 @@
     "form": false,
     "input": "select",
     "options": "proveedores",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "proveedor",
@@ -61,7 +67,8 @@
     "form": true,
     "input": "select",
     "options": "proveedores",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "labelMonto",
@@ -70,7 +77,8 @@
     "ficha": true,
     "form": false,
     "input": "number",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "monto",
@@ -79,7 +87,8 @@
     "ficha": false,
     "form": true,
     "input": "disabled",
-    "use": "database"
+    "use": "database",
+    "dato": "number"
   },
   {
     "key": "detalle",
@@ -87,7 +96,8 @@
     "ficha": true,
     "form": true,
     "input": "textarea",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
 
   {
@@ -98,7 +108,8 @@
     "form": true,
     "input": "list",
     "options": "productos",
-    "use": "detailDatabase"
+    "use": "detailDatabase",
+    "dato": "string"
   },
   {
     "key": "labelEstado",
@@ -107,6 +118,7 @@
     "form": false,
     "input": "select",
     "options": "estados",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   }
 ]

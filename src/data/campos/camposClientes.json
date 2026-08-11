@@ -4,7 +4,8 @@
     "label": "Identificador",
     "tabla": true,
     "ficha": true,
-    "form": false
+    "form": false,
+    "dato" : "string"
   },
   {
     "key": "nombre",
@@ -13,7 +14,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "direccion",
@@ -21,7 +23,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "localidad",
@@ -29,7 +32,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "contacto",
@@ -38,7 +42,8 @@
     "ficha": false,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "telefono",
@@ -46,7 +51,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "cuit",
@@ -54,7 +60,8 @@
     "ficha": true,
     "form": true,
     "input": "number",
-    "use": "database"
+    "use": "database",
+    "dato" : "number"
   },
   {
     "key": "razonSocial",
@@ -62,7 +69,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   },
   {
     "key": "detalle",
@@ -70,6 +78,7 @@
     "ficha": true,
     "form": true,
     "input": "textarea",
-    "use": "database"
+    "use": "database",
+    "dato" : "string"
   }
 ]

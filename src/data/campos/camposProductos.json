@@ -4,7 +4,8 @@
     "label": "Identificador",
     "tabla": true,
     "ficha": true,
-    "form": false
+    "form": false,
+    "dato": "string"
   },
   {
     "key": "descripcion",
@@ -13,7 +14,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "marca",
@@ -22,7 +24,8 @@
     "ficha": true,
     "form": true,
     "input": "text",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "costo",
@@ -30,13 +33,15 @@
     "ficha": false,
     "form": true,
     "input": "number",
-    "use": "database"
+    "use": "database",
+    "dato": "number"
   },
   {
     "key": "labelCosto",
     "label": "Costo",
     "ficha": true,
-    "form": false
+    "form": false,
+    "dato": "string"
   },
   {
     "key": "precio",
@@ -44,13 +49,15 @@
     "ficha": false,
     "form": true,
     "input": "number",
-    "use": "database"
+    "use": "database",
+    "dato": "number"
   },
   {
     "key": "labelPrecio",
     "label": "Precio",
     "ficha": true,
-    "form": false
+    "form": false,
+    "dato": "string"
   },
   {
     "key": "tipo",
@@ -59,18 +66,21 @@
     "form": true,
     "input": "select",
     "options": "tipos",
-    "use": "database"
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "labelTipo",
     "label": "Tipo",
     "ficha": true,
-    "form": false
+    "form": false,
+    "dato": "string"
   },
   {
     "key": "stock",
     "label": "Stock",
     "ficha": true,
-    "form": false
+    "form": false,
+    "dato": "number"
   }
 ]

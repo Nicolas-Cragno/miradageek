@@ -16,7 +16,7 @@ export async function submit({
     .filter((c) => c.form)
     .forEach((c) => {
       if (c.use === "database") {
-        data[c.key] = formData[c.key];
+        data[c.key] = campoFirestore(formData[c.key], c.dato);
       }
     });
 
@@ -32,4 +32,31 @@ export async function submit({
   });
 
   return idReturn;
+}
+
+function campoFirestore(valor, tipo = "string") {
+  if (valor === null || valor === undefined || valor === "") {
+    return valor;
+  }
+
+  switch (tipo.toLowerCase()) {
+    case "string":
+      return String(valor);
+
+    case "number": {
+      const numero = Number(valor);
+
+      if (!Number.isFinite(numero)) {
+        throw new Error(`"${valor}" no es un número válido.`);
+      }
+
+      return numero;
+    }
+
+    case "timestamp":
+      return valor;
+
+    default:
+      return valor;
+  }
 }

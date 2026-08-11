@@ -38,7 +38,6 @@ function codesFromCounter(collectionName, counterData, count) {
 
   return { codes, nextCounter: { serie, ultimo } };
 }
-
 export async function guardarOperacion({
   collection: collectionName,
   data,
@@ -156,11 +155,29 @@ export async function guardarOperacion({
           throw new Error("No hay stock suficiente para completar la venta.");
         }
 
-        update = { stock: nextStock };
+        update = {
+          stock: nextStock,
+        };
+
+        const costoActual = Number(product.data.costo);
+        const precioActual = Number(product.data.precio);
+
+        if (Number.isFinite(costoActual)) {
+          update.costo = costoActual;
+        }
+
+        if (Number.isFinite(precioActual)) {
+          update.precio = precioActual;
+        }
+
         if (nextItem) {
-          update[detailRef === "venta" ? "precio" : "costo"] = Number(
-            nextItem.precio,
-          );
+          const nuevoPrecio = Number(nextItem.precio);
+
+          if (!Number.isFinite(nuevoPrecio) || nuevoPrecio < 0) {
+            throw new Error("El precio debe ser un número válido.");
+          }
+
+          update[detailRef === "venta" ? "precio" : "costo"] = nuevoPrecio;
         }
       }
 
