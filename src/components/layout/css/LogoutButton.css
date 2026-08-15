@@ -1,0 +1,57 @@
+.logout-item {
+  width: 100%;
+  margin-top: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.logout-item:disabled,
+.mobile-logout:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.mobile-logout {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 210;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: var(--color-back);
+  color: var(--color-text);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-logout:hover {
+  background: var(--color-shadow);
+}
+
+.mobile-logout:active {
+  transform: scale(0.92);
+}
+
+.mobile-logout:focus-visible {
+  outline: 2px solid var(--color-title);
+  outline-offset: 3px;
+}
+
+.mobile-logout-icon {
+  font-size: 1.6rem;
+}
+
+@media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+  .mobile-logout {
+    display: flex;
+  }
+}

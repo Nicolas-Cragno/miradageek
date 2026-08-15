@@ -18,6 +18,25 @@ export function showWarning(title, text) {
   return Swal.fire({ ...theme, icon: "warning", title, text });
 }
 
+export async function showConfirmation(
+  title,
+  text,
+  confirmButtonText = "Confirmar",
+) {
+  const result = await Swal.fire({
+    ...theme,
+    icon: "question",
+    title,
+    text,
+    showCancelButton: true,
+    confirmButtonText,
+    cancelButtonText: "Cancelar",
+    reverseButtons: true,
+  });
+
+  return result.isConfirmed;
+}
+
 export function authErrorMessage(code) {
   const messages = {
     "auth/invalid-credential": "El correo o la contraseña no son correctos.",

@@ -6,6 +6,7 @@ import { IoPerson as CustomerLogo } from "react-icons/io5";
 import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
 import { FaCashRegister } from "react-icons/fa";
 import { IoCash } from "react-icons/io5";
+import LogoutButton from "./LogoutButton";
 
 export default function Sidebar({ open, setOpen }) {
   return (
@@ -47,6 +48,7 @@ export default function Sidebar({ open, setOpen }) {
           <IoCash className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Ventas</span>
         </NavLink>
+        <LogoutButton variant="sidebar" showText={open} />
       </nav>
     </div>
   );

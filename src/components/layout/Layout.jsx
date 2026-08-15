@@ -4,6 +4,7 @@ import Lowbar from "./Lowbar";
 import { Outlet } from "react-router-dom";
 import "./css/Layout.css";
 import DataLayer from "../../context/DataLayer";
+import LogoutButton from "./LogoutButton";
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,7 +33,12 @@ export default function Layout() {
         </DataLayer>
       </div>
 
-      {isMobile && <Lowbar />}
+      {isMobile && (
+        <>
+          <LogoutButton variant="mobile" />
+          <Lowbar />
+        </>
+      )}
     </div>
   );
 }

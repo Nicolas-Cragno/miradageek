@@ -14,7 +14,10 @@ service cloud.firestore {
     function isAuthorized() {
       return request.auth != null && request.auth.uid in [
         'ubPTOp82a5ahTMAcX6ZhUaBRZEL2',
-        'qgN6KgzqAwNRPKXTsTtI4QyVrPY2'
+        'qgN6KgzqAwNRPKXTsTtI4QyVrPY2',
+        'GsYfsPC1b3VswrY7Mr1RLFz9Zxw1',
+        'eHW6kOHdhdS8cK1Er0WtvoqW7hA3',
+        'LYXUeFyfEeaJ6gRIb2yrxCWXPkK2'
       ];
     }
 
