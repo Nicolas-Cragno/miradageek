@@ -10,9 +10,9 @@ export default function LogoutButton({ variant = "sidebar", showText = true }) {
 
   const handleLogout = async () => {
     const confirmed = await showConfirmation(
-      "¿Cerrar sesión?",
-      "¿Seguro que querés cerrar tu sesión?",
-      "Cerrar sesión",
+      "Cerrando sesión",
+      "¿Estas seguro?",
+      "Confirmar",
     );
 
     if (!confirmed) return;
@@ -42,7 +42,7 @@ export default function LogoutButton({ variant = "sidebar", showText = true }) {
       title="Cerrar sesión"
     >
       <IoLogOutOutline className={isSidebar ? "nav-logo" : "mobile-logout-icon"} />
-      {isSidebar && showText && <span className="nav-text">Cerrar sesión</span>}
+      {isSidebar && showText && <span className="nav-text">Salir</span>}
     </button>
   );
 }
