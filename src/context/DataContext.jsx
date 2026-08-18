@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { showError } from "../utils/alerts";
 
@@ -12,7 +12,14 @@ export function DataProvider({ children, collections: requestedCollections = [] 
   const errorShown = useRef(false);
 
   useEffect(() => {
-    const collections = [...new Set(requestedCollections)];
+    const collections = requestedCollections.filter(
+      (item, index, items) =>
+        items.findIndex((candidate) =>
+          typeof item === "string"
+            ? candidate === item
+            : candidate.nombre === item.nombre,
+        ) === index,
+    );
     setData({});
     setError("");
     errorShown.current = false;
@@ -29,15 +36,31 @@ export function DataProvider({ children, collections: requestedCollections = [] 
       }
     };
 
-    const unsubs = collections.map((nombreColeccion) =>
+    const unsubs = collections.map((configuracion) => {
+      const nombreColeccion =
+        typeof configuracion === "string" ? configuracion : configuracion.nombre;
+      const referencia = collection(db, nombreColeccion);
+      const consulta =
+        typeof configuracion === "string" || !configuracion.filtro
+          ? referencia
+          : query(
+              referencia,
+              where(
+                configuracion.filtro.campo,
+                "==",
+                configuracion.filtro.valor,
+              ),
+            );
+
+      return (
       onSnapshot(
-        collection(db, nombreColeccion),
+        consulta,
         (snapshot) => {
           setData((prev) => ({
             ...prev,
             [nombreColeccion]: snapshot.docs.map((documento) => ({
-              id: documento.id,
               ...documento.data(),
+              id: documento.id,
             })),
           }));
           marcarComoCargada(nombreColeccion);
@@ -59,8 +82,9 @@ export function DataProvider({ children, collections: requestedCollections = [] 
           }
           marcarComoCargada(nombreColeccion);
         },
-      ),
-    );
+      )
+      );
+    });
 
     return () => unsubs.forEach((unsub) => unsub());
   }, [requestedCollections]);

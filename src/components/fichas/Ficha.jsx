@@ -3,7 +3,7 @@ import { formatearCampoFirestore } from "../../functions/DataFunctions";
 import TextButton from "../buttons/TextButton";
 import "./css/Ficha.css";
 
-export default function Ficha({ item, campos = [], onEdit }) {
+export default function Ficha({ item, campos = [], onEdit, actions }) {
   if (!item) {
     return <img src={Logo} alt="empty" className="ficha-logo" />;
   }
@@ -43,8 +43,12 @@ export default function Ficha({ item, campos = [], onEdit }) {
       </div>
 
       <div className="ficha-toolbar">
-        <TextButton text="Editar" onClick={onEdit} />
-      </div>
+      
+      {actions && <div className="ficha-toolbar">{actions}</div>}
+      {onEdit && (
+          <TextButton text="Editar" onClick={onEdit} />
+        )}
+        </div>
     </div>
   );
 }

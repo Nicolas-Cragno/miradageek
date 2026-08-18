@@ -9,6 +9,9 @@ export async function submit({
   idElemento = null,
   detailCollection = null,
   detailRef = null,
+  usuario = "",
+  sucursalesDisponibles = [],
+  permitirNegativo = false,
 }) {
   const data = {};
 
@@ -16,7 +19,8 @@ export async function submit({
     .filter((c) => c.form)
     .forEach((c) => {
       if (c.use === "database") {
-        data[c.key] = campoFirestore(formData[c.key], c.dato);
+        const valor = campoFirestore(formData[c.key], c.dato);
+        if (valor !== undefined) data[c.key] = valor;
       }
     });
 
@@ -29,13 +33,17 @@ export async function submit({
     detailRef,
     detalleNuevo: campoDetalle ? formData[campoDetalle.key] ?? [] : [],
     detalleOriginal: campoDetalle ? originalData[campoDetalle.key] ?? [] : [],
+    usuario,
+    sucursalesDisponibles,
+    permitirNegativo,
   });
 
   return idReturn;
 }
 
 function campoFirestore(valor, tipo = "string") {
-  if (valor === null || valor === undefined || valor === "") {
+  if (valor === undefined) return undefined;
+  if (valor === null || valor === "") {
     return valor;
   }
 

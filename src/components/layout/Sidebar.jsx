@@ -7,12 +7,21 @@ import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
 import { FaCashRegister } from "react-icons/fa";
 import { IoCash } from "react-icons/io5";
 import LogoutButton from "./LogoutButton";
+import { FaUsers } from "react-icons/fa";
+import { useAuth } from "../../auth/AuthContext";
+import {
+  puedeAccederRuta,
+  rutaInicialPara,
+} from "../../auth/permisos";
 
 export default function Sidebar({ open, setOpen }) {
+  const { user } = useAuth();
+  const mostrar = (ruta) => puedeAccederRuta(user, ruta);
+
   return (
     <div className={`sidebar ${open ? "open" : "closed"}`}>
       <div className="sidebar-header">
-        <NavLink to="/">
+        <NavLink to={rutaInicialPara(user)}>
           <img src={Logo} alt="" className="logo" />
         </NavLink>
 
@@ -22,32 +31,40 @@ export default function Sidebar({ open, setOpen }) {
       </div>
 
       <nav className="sidebar-nav">
-        <NavLink
+        {mostrar("/productos") && <NavLink
           to="/productos"
           className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
         >
           <BoxLogo className="nav-icon" />
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Productos</span>
-        </NavLink>
-        <NavLink to="/clientes" className="nav-item">
+        </NavLink>}
+        {mostrar("/clientes") && <NavLink to="/clientes" className="nav-item">
           <CustomerLogo className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Clientes</span>
-        </NavLink>
-        <NavLink to="/proveedores" className="nav-item">
+        </NavLink>}
+        {mostrar("/proveedores") && <NavLink to="/proveedores" className="nav-item">
           <ProviderLogo className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>
             Proveedores
           </span>
-        </NavLink>
+        </NavLink>}
         <br />
-        <NavLink to="/compras" className="nav-item">
+        {mostrar("/compras") && <NavLink to="/compras" className="nav-item">
           <FaCashRegister className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Compras</span>
-        </NavLink>
-        <NavLink to="/ventas" className="nav-item">
+        </NavLink>}
+        {mostrar("/ventas") && <NavLink to="/ventas" className="nav-item">
           <IoCash className="nav-logo" />{" "}
           <span className={`nav-text ${!open ? "hidden" : ""}`}>Ventas</span>
-        </NavLink>
+        </NavLink>}
+        {mostrar("/usuarios") && (
+          <NavLink to="/usuarios" className="nav-item">
+            <FaUsers className="nav-logo" />
+            <span className={`nav-text ${!open ? "hidden" : ""}`}>
+              Usuarios
+            </span>
+          </NavLink>
+        )}
         <LogoutButton variant="sidebar" showText={open} />
       </nav>
     </div>

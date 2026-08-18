@@ -9,6 +9,12 @@
   backdrop-filter: blur(4px);
 }
 
+.form-warning {
+  margin: 0 0 12px;
+  color: #8a6400;
+  font-size: 0.9rem;
+}
+
 .modal-form {
   width: min(800px, 90vw);
   max-height: 90vh;

@@ -1,0 +1,10 @@
+[
+  { "key": "id", "label": "ID", "tabla": true, "ficha": true },
+  { "key": "nombre", "label": "Nombre", "tabla": true, "ficha": true },
+  { "key": "mail", "label": "Correo", "tabla": true, "ficha": true },
+  { "key": "labelRol", "label": "Rol", "tabla": true, "ficha": true },
+  { "key": "estado", "label": "Estado", "tabla": true, "ficha": true },
+  { "key": "uid", "label": "UID Auth", "tabla": false, "ficha": true },
+  { "key": "entidadTipo", "label": "Tipo de entidad", "tabla": false, "ficha": true },
+  { "key": "entidadId", "label": "Entidad relacionada", "tabla": false, "ficha": true }
+]

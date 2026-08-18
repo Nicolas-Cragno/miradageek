@@ -4,7 +4,16 @@ import ListStockForm from "../formularios/ListStockForm.jsx";
 import { useData } from "../../context/DataContext.jsx";
 import SearchableSelect from "./SearchableSelect.jsx";
 
-export default function InputForm({ campo, value, onChange, detailRef }) {
+export default function InputForm({
+  campo,
+  value,
+  onChange,
+  detailRef,
+  monedaOperacion,
+  valorDivisa,
+  tipoMovimiento,
+  sucursalMovimiento,
+}) {
   const { key, label, input = "text", options } = campo;
   const data = useData();
 
@@ -43,6 +52,16 @@ export default function InputForm({ campo, value, onChange, detailRef }) {
         />
       )}
 
+      {input === "staticSelect" && (
+        <select value={value ?? ""} onChange={handleChange}>
+          {(campo.values || []).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
+
       {input === "date" && (
         <input
           type="date"
@@ -60,6 +79,8 @@ export default function InputForm({ campo, value, onChange, detailRef }) {
           productos={data[options] || []}
           value={value ?? []}
           tipoOperacion={detailRef}
+          monedaOperacion={monedaOperacion}
+          valorDivisa={valorDivisa}
           onChange={(nuevoValor) => onChange(key, nuevoValor)}
         />
       )}
@@ -67,6 +88,8 @@ export default function InputForm({ campo, value, onChange, detailRef }) {
         <ListStockForm
           productos={data[options] || []}
           value={value ?? []}
+          tipoMovimiento={tipoMovimiento}
+          sucursalMovimiento={sucursalMovimiento}
           onChange={(nuevoValor) => onChange(key, nuevoValor)}
         />
       )}

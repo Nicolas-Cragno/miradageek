@@ -4,12 +4,18 @@ import { IoPerson as CustomerLogo } from "react-icons/io5";
 import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
 import { FaCashRegister } from "react-icons/fa";
 import { IoCash } from "react-icons/io5";
+import { FaUsers } from "react-icons/fa";
 
 export const linksElements = [
   {
     to: "/productos",
     icon: <ToyLogo className="nav-icon" size={50} />,
     label: "Productos",
+  },
+  {
+    to: "/usuarios",
+    icon: <FaUsers className="nav-icon" size={50} />,
+    label: "Usuarios",
   },
   {
     to: "/clientes",

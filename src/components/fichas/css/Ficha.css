@@ -95,4 +95,6 @@
   padding: 10px;
   margin: 20px;
   justify-content: right; 
+  align-items: center;
+  gap: 10px;
 }

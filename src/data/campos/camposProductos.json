@@ -82,5 +82,33 @@
     "ficha": true,
     "form": false,
     "dato": "number"
+  },
+  {
+    "key": "pendiente",
+    "label": "Pendiente",
+    "ficha": true,
+    "form": false,
+    "dato": "number"
+  },
+  {
+    "key": "reservado",
+    "label": "Reservado",
+    "ficha": true,
+    "form": false,
+    "dato": "number"
+  },
+  {
+    "key": "disponible",
+    "label": "Disponible",
+    "ficha": true,
+    "form": false,
+    "dato": "number"
+  },
+  {
+    "key": "stockSucursal",
+    "label": "Stock por sucursal",
+    "ficha": true,
+    "form": false,
+    "dato": "array"
   }
 ]

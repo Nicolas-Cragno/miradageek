@@ -1,5 +1,21 @@
 [
   {
+    "key": "tipo",
+    "label": "Tipo de movimiento",
+    "tabla": true,
+    "ficha": true,
+    "form": true,
+    "input": "staticSelect",
+    "default": "AJUSTE",
+    "values": [
+      { "value": "INGRESO", "label": "Ingreso" },
+      { "value": "EGRESO", "label": "Egreso" },
+      { "value": "AJUSTE", "label": "Ajuste" }
+    ],
+    "use": "database",
+    "dato": "string"
+  },
+  {
     "key": "id",
     "label": "Identificador",
     "tabla": true,

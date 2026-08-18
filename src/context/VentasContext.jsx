@@ -4,6 +4,7 @@ import { useDetalleVentas } from "./DetalleVentasContext";
 import monedas from "../data/monedas.json";
 import estados from "../data/estados.json";
 import { formatearCampoFirestore } from "../functions/DataFunctions";
+import { estadoVisible } from "../functions/operaciones/modeloOperaciones";
 
 const VentasContext = createContext();
 
@@ -14,7 +15,8 @@ export function VentasProvider({ children }) {
   const ventasEnriquecidos = useMemo(() => {
     return ventas.map((cp) => {
       const monedaCosto = monedas.find((mn) => mn.key === cp.moneda);
-      const estado = estados.find((st) => st.key === cp.estado);
+      const estadoOperacion = estadoVisible(cp);
+      const estado = estados.find((st) => st.key === estadoOperacion);
       const cli = clientes.find((pv) => pv.id === cp.cliente);
       const sucu = sucursales.find((sc) => sc.id === cp.sucursal);
       const date = formatearCampoFirestore(cp.fecha);
@@ -28,7 +30,8 @@ export function VentasProvider({ children }) {
         labelMonto: `${monedaCosto?.simbolo || "$"} ${cp.monto ?? 0}`,
         labelCliente: cli?.nombre || "",
         labelSucursal: sucu?.nombre || "",
-        labelEstado: estado?.label || "",
+        estado: estadoOperacion,
+        labelEstado: estado?.label || estadoOperacion,
         label: lbl,
       };
     });

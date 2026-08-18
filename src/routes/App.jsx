@@ -10,6 +10,11 @@ import Compras from "../sections/Compras";
 import Ventas from "../sections/Ventas";
 import "./css/App.css";
 import NotFound from "./NotFound";
+import Usuarios from "../sections/Usuarios";
+
+const proteger = (ruta, componente) => (
+  <ProtectedRoute ruta={ruta}>{componente}</ProtectedRoute>
+);
 
 export default function App() {
   return (
@@ -27,12 +32,31 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/productos" element={<Productos />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/proveedores" element={<Proveedores />} />
-          <Route path="/compras" element={<Compras />} />
-          <Route path="/ventas" element={<Ventas />} />
+          <Route path="/" element={proteger("/", <Dashboard />)} />
+          <Route
+            path="/productos"
+            element={proteger("/productos", <Productos />)}
+          />
+          <Route
+            path="/clientes"
+            element={proteger("/clientes", <Clientes />)}
+          />
+          <Route
+            path="/proveedores"
+            element={proteger("/proveedores", <Proveedores />)}
+          />
+          <Route
+            path="/compras"
+            element={proteger("/compras", <Compras />)}
+          />
+          <Route
+            path="/ventas"
+            element={proteger("/ventas", <Ventas />)}
+          />
+          <Route
+            path="/usuarios"
+            element={proteger("/usuarios", <Usuarios />)}
+          />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

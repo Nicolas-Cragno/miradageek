@@ -8,6 +8,9 @@ import "./css/Sections.css";
 import TextButton from "../components/buttons/TextButton";
 
 import camposStock from "../data/campos/camposStock.json";
+import { useAuth } from "../auth/AuthContext";
+import { puedeGestionarOperaciones } from "../auth/permisos";
+import TransferenciaForm from "../components/formularios/TransferenciaForm";
 
 export default function Section({
   data = [],
@@ -18,10 +21,14 @@ export default function Section({
   detailCollection = null,
   detailRef = null,
   buttonStock = false,
+  renderActions = null,
 }) {
+  const { user } = useAuth();
+  const puedeGestionar = puedeGestionarOperaciones(user);
   const [selected, setSelected] = useState(null);
   const [formType, setFormType] = useState("default");
   const [formOpen, setFormOpen] = useState(false);
+  const [transferenciaOpen, setTransferenciaOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [view, setView] = useState("list");
@@ -67,8 +74,20 @@ export default function Section({
     }
   };
 
+  useEffect(() => {
+    if (!selected) return;
+    const actualizado = data.find((item) => item.id === selected.id);
+    if (actualizado && actualizado !== selected) setSelected(actualizado);
+  }, [data, selected]);
+
   function guardar() {
     setFormOpen(false);
+    if (isMobile) setView("list");
+  }
+
+  function cerrarFormulario() {
+    setFormOpen(false);
+    if (isMobile) setView("list");
   }
 
   const volver = () => {
@@ -83,10 +102,13 @@ export default function Section({
             <div className="section-header">
               <h1>{title}</h1>
               <div className="section-header-buttons">
-                {buttonStock && (
-                  <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
+                {buttonStock && puedeGestionar && (
+                  <>
+                    <TextButton text={"Transferir"} onClick={() => setTransferenciaOpen(true)} />
+                    <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
+                  </>
                 )}
-                <TextButton text={"+ Nuevo"} onClick={nuevo} />
+                {puedeGestionar && <TextButton text={"+ Nuevo"} onClick={nuevo} />}
               </div>
             </div>
 
@@ -94,7 +116,12 @@ export default function Section({
           </div>
 
           <div className="section-detail">
-            <Ficha item={selected} campos={campos} onEdit={editar} />
+            <Ficha
+              item={selected}
+              campos={campos}
+              onEdit={puedeGestionar ? editar : null}
+              actions={renderActions?.(selected)}
+            />
           </div>
         </div>
 
@@ -110,13 +137,20 @@ export default function Section({
                 ? `Editar ${title}`
                 : `Nuevo ${title}`
           }
-          onClose={() => setFormOpen(false)}
+          onClose={cerrarFormulario}
           onSave={guardar}
           detailCollection={
             formType === "stock" ? "detalleStock" : detailCollection
           }
           detailRef={formType === "stock" ? "stock" : detailRef}
         />
+        {buttonStock && (
+          <TransferenciaForm
+            open={transferenciaOpen}
+            onClose={() => setTransferenciaOpen(false)}
+            onSave={guardar}
+          />
+        )}
       </>
     );
   } else {
@@ -126,7 +160,10 @@ export default function Section({
           <div className="section-list">
             <div className="section-header ">
               <h1>{title}</h1>
-              <TextButton text="+ Nuevo" onClick={nuevo} />
+              {puedeGestionar && <TextButton text="+ Nuevo" onClick={nuevo} />}
+              {buttonStock && puedeGestionar && (
+                <TextButton text="Transferir" onClick={() => setTransferenciaOpen(true)} />
+              )}
             </div>
 
             <Tabla data={data} campos={campos} onSelect={seleccionar} />
@@ -144,7 +181,7 @@ export default function Section({
                   ? `Editar ${title}`
                   : `Nuevo ${title}`
             }
-            onClose={() => setFormOpen(false)}
+            onClose={cerrarFormulario}
             onSave={guardar}
             detailCollection={
               formType === "stock" ? "detalleStock" : detailCollection
@@ -158,7 +195,12 @@ export default function Section({
                 <FiArrowLeft />
               </button>
 
-              <Ficha item={selected} campos={campos} onEdit={editar} />
+              <Ficha
+                item={selected}
+                campos={campos}
+                onEdit={puedeGestionar ? editar : null}
+                actions={renderActions?.(selected)}
+              />
             </div>
             <FormComponent
               open={formOpen}
@@ -172,7 +214,7 @@ export default function Section({
                     ? `Editar ${title}`
                     : `Nuevo ${title}`
               }
-              onClose={() => setFormOpen(false)}
+              onClose={cerrarFormulario}
               onSave={guardar}
               detailCollection={
                 formType === "stock" ? "detalleStock" : detailCollection
@@ -180,6 +222,13 @@ export default function Section({
               detailRef={formType === "stock" ? "stock" : detailRef}
             />
           </>
+        )}
+        {buttonStock && (
+          <TransferenciaForm
+            open={transferenciaOpen}
+            onClose={() => setTransferenciaOpen(false)}
+            onSave={guardar}
+          />
         )}
       </>
     );

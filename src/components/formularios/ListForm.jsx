@@ -9,13 +9,14 @@ export default function ListForm({
   value = [],
   onChange,
   tipoOperacion,
+  monedaOperacion = "ARS",
+  valorDivisa = 1,
 }) {
   const listado = Array.isArray(value) ? value : [];
 
   const [producto, setProducto] = useState("");
   const [cantidad, setCantidad] = useState(1);
   const [precio, setPrecio] = useState("");
-  const [moneda, setMoneda] = useState("ARS");
 
   const agregarItem = () => {
     if (!producto) return;
@@ -37,7 +38,12 @@ export default function ListForm({
       onChange(
         listado.map((item) =>
           String(item.idProducto) === String(prod.id)
-            ? { ...item, cantidad: item.cantidad + cantidadNum }
+            ? {
+                ...item,
+                cantidad: Number(item.cantidad) + cantidadNum,
+                precio: precioNum,
+                moneda: monedaOperacion,
+              }
             : item,
         ),
       );
@@ -49,14 +55,15 @@ export default function ListForm({
           descripcion: prod.descripcion || prod.nombre,
           cantidad: cantidadNum,
           precio: precioNum,
-          moneda: moneda,
+          moneda: monedaOperacion,
+          cantidadCumplida: 0,
         },
       ]);
     }
 
     setProducto("");
     setCantidad(1);
-    setPrecio(0); // ver nota abajo
+    setPrecio("");
   };
 
   const eliminarItem = (id) => {
@@ -110,14 +117,24 @@ export default function ListForm({
 
             if (prod) {
               const precioProducto =
-                tipoOperacion === "compra" ? prod.costo : prod.precio;
+                 tipoOperacion === "compra" ? prod.costo : prod.precio;
               const precioNumerico = Number(precioProducto);
-              setPrecio(Number.isFinite(precioNumerico) ? precioNumerico : 0);
-              setMoneda(
+              const monedaProducto =
                 tipoOperacion === "compra"
                   ? prod.monedaCosto || "ARS"
-                  : prod.monedaPrecio || "ARS",
-              );
+                  : prod.monedaPrecio || "ARS";
+              const origen = ["USD", "dolares"].includes(monedaProducto)
+                ? "USD"
+                : "ARS";
+              const destino = monedaOperacion || "ARS";
+              const cotizacion = Number(valorDivisa);
+              let convertido = Number.isFinite(precioNumerico) ? precioNumerico : 0;
+              if (origen === "USD" && destino === "ARS") {
+                convertido *= Number.isFinite(cotizacion) && cotizacion > 0 ? cotizacion : 1;
+              } else if (origen === "ARS" && destino === "USD") {
+                convertido /= Number.isFinite(cotizacion) && cotizacion > 0 ? cotizacion : 1;
+              }
+              setPrecio(convertido);
             }
           }}
         />
@@ -138,10 +155,7 @@ export default function ListForm({
           placeholder="Precio"
         />
 
-        <select value={moneda} onChange={(e) => setMoneda(e.target.value)}>
-          <option value="ARS">Pesos ($)</option>
-          <option value="USD">Dólares (U$S)</option>
-        </select>
+        <span>{monedaOperacion}</span>
 
         <button type="button" className="btn-add" onClick={agregarItem}>
           Agregar
@@ -154,6 +168,8 @@ export default function ListForm({
             <th>Producto</th>
             <th>Cant.</th>
             <th>Precio</th>
+            <th>Cumplida</th>
+            <th>Restante</th>
             <th>Moneda</th>
             <th>Subtotal</th>
             <th></th>
@@ -163,7 +179,7 @@ export default function ListForm({
         <tbody>
           {listado.length === 0 && (
             <tr>
-              <td colSpan={5} className="empty">
+              <td colSpan={8} className="empty">
                 Sin productos agregados
               </td>
             </tr>
@@ -184,7 +200,6 @@ export default function ListForm({
                   }
                 />
               </td>
-
               <td>
                 <input
                   type="number"
@@ -193,6 +208,13 @@ export default function ListForm({
                     actualizarPrecio(item.idProducto, e.target.value)
                   }
                 />
+              </td>
+              <td>{Number(item.cantidadCumplida || 0)}</td>
+              <td>
+                {Math.max(
+                  Number(item.cantidad || 0) - Number(item.cantidadCumplida || 0),
+                  0,
+                )}
               </td>
               <td>{item.moneda}</td>
 

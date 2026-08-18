@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { login, logout, subscribeAuth } from "./authService";
-import { collection, getDocs, limit, query, where } from "firebase/firestore";
+import { login, logout, recuperarPassword, subscribeAuth } from "./authService";
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { showError, showWarning } from "../utils/alerts";
 
@@ -11,7 +11,18 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelarAcceso = null;
+    let cancelarUsuario = null;
+
+    const limpiarListeners = () => {
+      cancelarAcceso?.();
+      cancelarUsuario?.();
+      cancelarAcceso = null;
+      cancelarUsuario = null;
+    };
+
     const unsub = subscribeAuth(async (firebaseUser) => {
+      limpiarListeners();
       if (!firebaseUser) {
         setUser(null);
         setLoading(false);
@@ -20,46 +31,79 @@ export function AuthProvider({ children }) {
 
       setLoading(true);
 
-      try {
-        const userQuery = query(
-          collection(db, "usuarios"),
-          where("uid", "==", firebaseUser.uid),
-          limit(1),
-        );
-        const snapshot = await getDocs(userQuery);
-        const userDocument = snapshot.docs[0];
-        const registeredUser = userDocument
-          ? { id: userDocument.id, ...userDocument.data() }
-          : null;
+      const rechazarAcceso = async (mensaje) => {
+        limpiarListeners();
+        setUser(null);
+        setLoading(false);
+        await logout();
+        await showWarning("Acceso no habilitado", mensaje);
+      };
 
-        if (!registeredUser || registeredUser.estado !== true) {
+      cancelarAcceso = onSnapshot(
+        doc(db, "accesosUsuarios", firebaseUser.uid),
+        (accesoSnapshot) => {
+          const acceso = accesoSnapshot.exists() ? accesoSnapshot.data() : null;
+
+          if (!acceso || acceso.estado !== true || !acceso.usuarioId) {
+            void rechazarAcceso(
+              "Tu cuenta no está autorizada para ingresar a Mirada Geek.",
+            );
+            return;
+          }
+
+          cancelarUsuario?.();
+          cancelarUsuario = onSnapshot(
+            doc(db, "usuarios", acceso.usuarioId),
+            (usuarioSnapshot) => {
+              const usuario = usuarioSnapshot.exists()
+                ? { ...usuarioSnapshot.data(), id: usuarioSnapshot.id }
+                : null;
+
+              if (!usuario || usuario.uid !== firebaseUser.uid) {
+                void rechazarAcceso(
+                  "No encontramos un usuario interno válido para tu cuenta.",
+                );
+                return;
+              }
+
+              setUser({
+                ...firebaseUser,
+                ...usuario,
+                tipo: acceso.tipo,
+                estado: acceso.estado,
+                entidadTipo: acceso.entidadTipo ?? "",
+                entidadId: acceso.entidadId ?? "",
+              });
+              setLoading(false);
+            },
+            () => {
+              void rechazarAcceso("No pudimos validar tu usuario interno.");
+            },
+          );
+        },
+        async () => {
+          limpiarListeners();
           await logout();
           setUser(null);
-          await showWarning(
-            "Acceso no habilitado",
-            "Tu cuenta no está autorizada para ingresar a Mirada Geek.",
+          setLoading(false);
+          await showError(
+            "No pudimos validar tu cuenta",
+            "Revisá tu conexión o intentá nuevamente en unos minutos.",
           );
-          return;
-        }
-
-        setUser({ ...firebaseUser, ...registeredUser });
-      } catch {
-        await logout();
-        setUser(null);
-        await showError(
-          "No pudimos validar tu cuenta",
-          "Revisá tu conexión o intentá nuevamente en unos minutos.",
-        );
-      } finally {
-        setLoading(false);
-      }
+        },
+      );
     });
 
-    return () => unsub();
+    return () => {
+      limpiarListeners();
+      unsub();
+    };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, recuperarPassword, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );

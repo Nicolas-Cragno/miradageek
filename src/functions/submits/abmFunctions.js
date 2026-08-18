@@ -4,6 +4,10 @@ import {
   runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
+import {
+  guardarMovimientoManual,
+  guardarOperacionNucleo,
+} from "../operaciones/operacionesService";
 
 const detailInternalFields = new Set([
   "id",
@@ -46,7 +50,34 @@ export async function guardarOperacion({
   detailRef = null,
   detalleNuevo = [],
   detalleOriginal = [],
+  usuario = "",
+  sucursalesDisponibles = [],
+  permitirNegativo = false,
 }) {
+  if (["compras", "ventas"].includes(collectionName)) {
+    return guardarOperacionNucleo({
+      collection: collectionName,
+      data,
+      idElemento,
+      detailCollection,
+      detailRef,
+      detalleNuevo,
+      detalleOriginal,
+      usuario,
+      sucursalesDisponibles,
+      permitirNegativo,
+    });
+  }
+  if (collectionName === "stock") {
+    return guardarMovimientoManual({
+      data,
+      detalles: detalleNuevo,
+      usuario,
+      sucursalesDisponibles,
+      permitirNegativo,
+    });
+  }
+
   return runTransaction(db, async (transaction) => {
     const mainCounterRef = idElemento
       ? null

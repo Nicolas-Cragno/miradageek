@@ -4,7 +4,15 @@ import "./css/Form.css";
 import { submit } from "../../functions/submits/submits";
 import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
-import { showError, showSuccess } from "../../utils/alerts";
+import {
+  showConfirmation,
+  showError,
+  showSuccess,
+} from "../../utils/alerts";
+import { useAuth } from "../../auth/AuthContext";
+import { useData } from "../../context/DataContext";
+import { calcularMontos, ESTADOS_OPERACION } from "../../functions/operaciones/modeloOperaciones";
+import { obtenerVentaDolarOficial } from "../../services/dolarService";
 
 export default function Form({
   open = false,
@@ -17,10 +25,13 @@ export default function Form({
   detailCollection = null,
   detailRef = null,
 }) {
+  const { user } = useAuth();
+  const { sucursales = [] } = useData();
   const [formData, setFormData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [cotizacionWarning, setCotizacionWarning] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -45,17 +56,13 @@ export default function Form({
 
     const items = formData[campoDetalle.key] ?? [];
 
-    const total = items.reduce((acc, item) => {
-      const cantidad = Number(item.cantidad) || 0;
-      const precio = Number(item.precio) || 0;
+    const { parcial, monto } = calcularMontos(items, formData.descuento);
 
-      return acc + cantidad * precio;
-    }, 0);
-
-    if (formData.monto !== total) {
+    if (formData.monto !== monto || formData.parcial !== parcial) {
       setFormData((prev) => ({
         ...prev,
-        monto: total,
+        parcial,
+        monto,
       }));
     }
   }, [formData, campos]);
@@ -82,30 +89,101 @@ export default function Form({
     }
   }, [item, campos, open]);
 
+  useEffect(() => {
+    if (!open || item || !["compras", "ventas"].includes(collection)) return;
+    let activo = true;
+    setCotizacionWarning("");
+    obtenerVentaDolarOficial()
+      .then((venta) => {
+        if (activo) setFormData((previo) => ({ ...previo, valorDivisa: venta }));
+      })
+      .catch(() => {
+        if (activo) {
+          setCotizacionWarning(
+            "No se pudo obtener el dólar oficial. Podés ingresar la cotización manualmente.",
+          );
+        }
+      });
+    return () => {
+      activo = false;
+    };
+  }, [collection, item, open]);
+
   if (!open) return null;
-  const camposForm = campos.filter((c) => c.form);
+  const camposForm = campos.filter((c) => c.form && (!item || !c.altaOnly));
 
   function handleChange(key, value) {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setFormData((prev) => {
+      if (key === "tipo" && collection === "stock" && prev.tipo !== value) {
+        const campoDetalle = campos.find((campo) => campo.use === "detailDatabase");
+        return {
+          ...prev,
+          tipo: value,
+          ...(campoDetalle ? { [campoDetalle.key]: [] } : {}),
+        };
+      }
+      if (key !== "moneda" || !["ARS", "USD"].includes(value)) {
+        return { ...prev, [key]: value };
+      }
+      const campoDetalle = campos.find((campo) => campo.use === "detailDatabase");
+      if (!campoDetalle || prev.moneda === value) return { ...prev, moneda: value };
+      const cotizacion = Number(prev.valorDivisa);
+      if (!Number.isFinite(cotizacion) || cotizacion <= 0) {
+        return { ...prev, moneda: value };
+      }
+      const detalles = (prev[campoDetalle.key] || []).map((detalle) => ({
+        ...detalle,
+        precio:
+          prev.moneda === "USD" && value === "ARS"
+            ? Number(detalle.precio) * cotizacion
+            : Number(detalle.precio) / cotizacion,
+        moneda: value,
+      }));
+      return { ...prev, moneda: value, [campoDetalle.key]: detalles };
+    });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     setSaveError("");
+
+    const campoDetalle = campos.find((campo) => campo.use === "detailDatabase");
+    const detalles = campoDetalle ? formData[campoDetalle.key] ?? [] : [];
+    if (["compras", "ventas"].includes(collection)) {
+      const referencia = collection === "compras" ? "proveedor" : "cliente";
+      const descuento = Number(formData.descuento ?? 0);
+      if (!formData[referencia]) {
+        await showError("Datos incompletos", `Seleccioná un ${referencia}.`);
+        return;
+      }
+      if (!formData.sucursal) {
+        await showError("Datos incompletos", "Seleccioná una sucursal.");
+        return;
+      }
+      if (!detalles.length) {
+        await showError(
+          "Operación sin productos",
+          "La operación debe contener al menos un producto.",
+        );
+        return;
+      }
+      if (!Number.isFinite(descuento) || descuento < 0 || descuento > 100) {
+        await showError("Descuento inválido", "El descuento debe estar entre 0 y 100.");
+        return;
+      }
+    }
+
     setSaving(true);
 
-    try {
+    const ejecutarGuardado = async (permitirNegativo = false) => {
       let mainData = {};
 
       camposForm.forEach((c) => {
         mainData[c.key] = formData[c.key];
       });
 
-      await submit({
+      return submit({
         collection,
         formData: mainData,
         originalData: originalData,
@@ -113,7 +191,41 @@ export default function Form({
         idElemento: item?.id ?? null,
         detailCollection,
         detailRef,
+        usuario: user?.id || "",
+        sucursalesDisponibles: sucursales.map((sucursal) => sucursal.id),
+        permitirNegativo,
       });
+    };
+
+    try {
+      if (
+        !item &&
+        formData.estado === ESTADOS_OPERACION.COMPLETADA &&
+        !(await showConfirmation(
+          "Movimiento físico inmediato",
+          `${collection === "compras" ? "Ingresarán" : "Saldrán"} las unidades informadas en la sucursal seleccionada.`,
+          "Confirmar operación",
+        ))
+      ) {
+        setSaving(false);
+        return;
+      }
+
+      try {
+        await ejecutarGuardado(false);
+      } catch (error) {
+        if (error?.code !== "stock-negativo") throw error;
+        const confirmado = await showConfirmation(
+          "Stock o disponibilidad negativa",
+          error.message,
+          "Continuar igualmente",
+        );
+        if (!confirmado) {
+          setSaving(false);
+          return;
+        }
+        await ejecutarGuardado(true);
+      }
 
       setSaving(false);
 
@@ -157,6 +269,7 @@ export default function Form({
               {saveError}
             </p>
           )}
+          {cotizacionWarning && <p className="form-warning">{cotizacionWarning}</p>}
           <div className="form-grid">
             {camposForm.map((campo) => (
               <div
@@ -172,6 +285,10 @@ export default function Form({
                   value={formData[campo.key]}
                   onChange={handleChange}
                   detailRef={detailRef}
+                  monedaOperacion={formData.moneda}
+                  valorDivisa={formData.valorDivisa}
+                  tipoMovimiento={formData.tipo}
+                  sucursalMovimiento={formData.sucursal}
                 />
               </div>
             ))}

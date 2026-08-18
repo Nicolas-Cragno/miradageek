@@ -18,6 +18,12 @@ export function ProductosProvider({ children }) {
 
         return {
           ...pd,
+          stock: Number(pd.stock ?? 0),
+          pendiente: Number(pd.pendiente ?? 0),
+          reservado: Number(pd.reservado ?? 0),
+          disponible:
+            Number(pd.stock ?? 0) - Number(pd.reservado ?? 0),
+          stockSucursal: Array.isArray(pd.stockSucursal) ? pd.stockSucursal : [],
 
           labelCosto: `${monedaCosto?.simbolo || "$"} ${pd.costo ?? 0}`,
           labelPrecio: `${monedaPrecio?.simbolo || "$"} ${pd.precio ?? 0}`,

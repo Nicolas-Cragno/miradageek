@@ -88,6 +88,7 @@
   cursor: pointer;
   transition: background 0.3s ease;
   white-space: nowrap;
+  max-height: max-content;
 }
 
 
