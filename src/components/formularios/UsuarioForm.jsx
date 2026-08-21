@@ -52,9 +52,9 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
             tipo: item.tipo ?? "01",
             estado: item.estado === true,
             entidadTipo:
-              item.tipo === ROLES.USUARIO ? item.entidadTipo ?? null : null,
+              item.tipo === ROLES.USUARIO ? (item.entidadTipo ?? null) : null,
             entidadId:
-              item.tipo === ROLES.USUARIO ? item.entidadId ?? null : null,
+              item.tipo === ROLES.USUARIO ? (item.entidadId ?? null) : null,
             password: "",
             confirmarPassword: "",
           }
@@ -162,7 +162,7 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
           <button type="button" className="modal-close" onClick={onClose}>
             ✕
           </button>
-          <h2>{item ? "Editar usuario" : "Nuevo usuario interno"}</h2>
+          <h2>{item ? "Editar usuario" : "Nuevo interno"}</h2>
           <div className="modal-spacer" />
         </div>
         <form onSubmit={guardar}>
@@ -255,7 +255,9 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
                   >
                     <option value="">Seleccioná un tipo</option>
                     <option value={ENTIDADES_USUARIO.CLIENTE}>Cliente</option>
-                    <option value={ENTIDADES_USUARIO.PROVEEDOR}>Proveedor</option>
+                    <option value={ENTIDADES_USUARIO.PROVEEDOR}>
+                      Proveedor
+                    </option>
                   </select>
                 </div>
                 <div className="form-group">

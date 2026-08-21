@@ -116,7 +116,7 @@ export default function Section({
                 )}
                 {puedeGestionar && permitirAlta && (
                   <TextButton
-                    text={"Nuevo usuario"}
+                    text={"Nuevo"}
                     onClick={nuevo}
                     disabled={!permitirAlta}
                     title={!permitirAlta ? mensajeAltaDeshabilitada : undefined}
@@ -175,7 +175,7 @@ export default function Section({
               <h1>{title}</h1>
               {puedeGestionar && permitirAlta && (
                 <TextButton
-                  text={"Nuevo usuario"}
+                  text={"Nuevo"}
                   onClick={nuevo}
                   disabled={!permitirAlta}
                   title={!permitirAlta ? mensajeAltaDeshabilitada : undefined}
