@@ -29,7 +29,15 @@ const collectionsByRoute = {
     "sucursales",
     "productos",
     "tipos",
+    {
+      nombre: "canalesVentas",
+      filtros: [
+        { campo: "estado", valor: true },
+        { campo: "__name__", operador: "!=", valor: "CV-A0000" },
+      ],
+    },
   ],
+  "/estadisticas": ["canalesVentas"],
   "/usuarios": [
     "usuarios",
     "accesosUsuarios",

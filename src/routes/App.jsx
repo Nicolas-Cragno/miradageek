@@ -11,6 +11,7 @@ import Ventas from "../sections/Ventas";
 import "./css/App.css";
 import NotFound from "./NotFound";
 import Usuarios from "../sections/Usuarios";
+import Estadisticas from "../sections/Estadisticas";
 
 const proteger = (ruta, componente) => (
   <ProtectedRoute ruta={ruta}>{componente}</ProtectedRoute>
@@ -56,6 +57,10 @@ export default function App() {
           <Route
             path="/usuarios"
             element={proteger("/usuarios", <Usuarios />)}
+          />
+          <Route
+            path="/estadisticas"
+            element={proteger("/estadisticas", <Estadisticas />)}
           />
         </Route>
         <Route path="*" element={<NotFound />} />

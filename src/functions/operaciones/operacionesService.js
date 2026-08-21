@@ -17,6 +17,13 @@ import {
   normalizarTipoMovimiento,
   actualizarStockSucursal,
 } from "./modeloOperaciones";
+import {
+  aplicarDiferenciaEstadistica,
+  calcularHuellaVenta,
+  leerAcumuladosVenta,
+  normalizarMoneda,
+  validarCanalSeleccionable,
+} from "./estadisticasVentas";
 
 const configuracionIds = {
   compras: ["CP-", 8, 99999999],
@@ -393,6 +400,7 @@ export async function guardarOperacionNucleo({
   usuario,
   sucursalesDisponibles = [],
   permitirNegativo = false,
+  cotizacionCosto = null,
 }) {
   validarDetalles(detalleNuevo);
   const esCompra = coleccion === "compras";
@@ -458,10 +466,10 @@ export async function guardarOperacionNucleo({
     }
 
     let operacionId = idElemento;
+    let asignacionPrincipal = null;
     if (!operacionId) {
-      const asignacion = asignarCodigos(coleccion, contadorPrincipal.data(), 1);
-      [operacionId] = asignacion.codigos;
-      transaction.update(contadorPrincipalRef, asignacion.contador);
+      asignacionPrincipal = asignarCodigos(coleccion, contadorPrincipal.data(), 1);
+      [operacionId] = asignacionPrincipal.codigos;
     }
 
     const operacionAnterior = operacionSnapshot?.data() || {};
@@ -495,7 +503,43 @@ export async function guardarOperacionNucleo({
       if (anterior && anterior.idProducto !== detalle.idProducto && cantidadCumplida > 0) {
         throw new Error("No puede cambiarse un producto que ya tuvo cumplimiento.");
       }
-      return { ...detalle, cantidadCumplida, activo: true };
+      const normalizado = { ...detalle, cantidadCumplida, activo: true };
+      if (!esCompra) {
+        if (anterior) {
+          for (const campo of [
+            "costo",
+            "monedaCosto",
+            "valorDivisaCosto",
+            "costoEnPesos",
+            "cumplimientos",
+          ]) {
+            if (anterior[campo] !== undefined) normalizado[campo] = anterior[campo];
+          }
+        } else {
+          const producto = productos.get(detalle.idProducto)?.datos;
+          const costo = numeroSeguro(producto?.costo, Number.NaN);
+          const monedaCosto = normalizarMoneda(producto?.monedaCosto);
+          const valorDivisaCosto = monedaCosto === "USD"
+            ? numeroSeguro(cotizacionCosto, Number.NaN)
+            : 1;
+          if (!Number.isFinite(costo) || costo < 0) {
+            throw new Error("El producto no tiene un costo válido para guardar su valor histórico.");
+          }
+          if (!Number.isFinite(valorDivisaCosto) || valorDivisaCosto <= 0) {
+            throw new Error(
+              "No se pudo obtener una cotización válida para conservar el costo histórico en pesos.",
+            );
+          }
+          normalizado.costo = costo;
+          normalizado.monedaCosto = monedaCosto;
+          normalizado.valorDivisaCosto = valorDivisaCosto;
+          normalizado.costoEnPesos = costo * valorDivisaCosto;
+          normalizado.cumplimientos = esAltaCompletada
+            ? [{ fecha: fechaCambio, cantidad: numeroSeguro(detalle.cantidad) }]
+            : [];
+        }
+      }
+      return normalizado;
     });
 
     for (const anterior of originalesNormalizados) {
@@ -523,6 +567,31 @@ export async function guardarOperacionNucleo({
       moneda,
     };
     delete datosOperacion.fecha;
+
+    let acumuladosVenta = null;
+    let huellaAnterior = null;
+    let huellaNueva = null;
+    if (!esCompra) {
+      acumuladosVenta = await leerAcumuladosVenta(transaction, [
+        operacionAnterior.estadisticas?.canal,
+        datosOperacion.canal,
+      ]);
+      validarCanalSeleccionable(acumuladosVenta, datosOperacion.canal);
+      huellaAnterior = operacionAnterior.estadisticas?.version
+        ? operacionAnterior.estadisticas
+        : null;
+      huellaNueva = !idElemento || huellaAnterior
+        ? calcularHuellaVenta({ venta: datosOperacion, detalles: nuevosNormalizados })
+        : null;
+      if (huellaNueva?.contabilizable === false) {
+        throw new Error("La venta no tiene costos históricos completos para contabilizarse.");
+      }
+      if (huellaNueva) datosOperacion.estadisticas = huellaNueva;
+    }
+
+    if (asignacionPrincipal) {
+      transaction.update(contadorPrincipalRef, asignacionPrincipal.contador);
+    }
 
     if (!idElemento) {
       datosOperacion.fecha = serverTimestamp();
@@ -734,6 +803,15 @@ export async function guardarOperacionNucleo({
       });
     }
 
+    if (!esCompra && huellaNueva) {
+      aplicarDiferenciaEstadistica({
+        transaction,
+        acumulados: acumuladosVenta,
+        huellaAnterior,
+        huellaNueva,
+      });
+    }
+
     return operacionId;
   });
 }
@@ -775,6 +853,7 @@ export async function registrarCumplimiento({
   if (!cantidadesPositivas.length) {
     throw new Error("Informá al menos una cantidad a cumplir.");
   }
+  const fechaCumplimiento = Timestamp.now();
 
   return runTransaction(db, async (transaction) => {
     const operacionRef = doc(db, coleccion, operacion.id);
@@ -814,6 +893,15 @@ export async function registrarCumplimiento({
       transaction,
       cantidadesPositivas.length,
     );
+    const huellaAnterior = !esCompra && datosOperacion.estadisticas?.version
+      ? datosOperacion.estadisticas
+      : null;
+    const acumuladosVenta = huellaAnterior
+      ? await leerAcumuladosVenta(transaction, [huellaAnterior.canal])
+      : null;
+    if (huellaAnterior) {
+      validarCanalSeleccionable(acumuladosVenta, datosOperacion.canal);
+    }
 
     const actualizacionesProducto = new Map();
     const movimientoDetalles = [];
@@ -830,6 +918,14 @@ export async function registrarCumplimiento({
       detallesActualizados.push({
         ...detalle.datos,
         cantidadCumplida: cumplidaNueva,
+        ...(!esCompra && solicitado > 0
+          ? {
+              cumplimientos: [
+                ...(detalle.datos.cumplimientos || []),
+                { fecha: fechaCumplimiento, cantidad: solicitado },
+              ],
+            }
+          : {}),
       });
       if (!solicitado) continue;
 
@@ -871,6 +967,14 @@ export async function registrarCumplimiento({
       });
       transaction.update(detalle.referencia, {
         cantidadCumplida: cumplidaNueva,
+        ...(!esCompra && solicitado > 0
+          ? {
+              cumplimientos: [
+                ...(detalle.datos.cumplimientos || []),
+                { fecha: fechaCumplimiento, cantidad: solicitado },
+              ],
+            }
+          : {}),
       });
     }
 
@@ -894,7 +998,14 @@ export async function registrarCumplimiento({
         detalle: "Cumplimiento de mercadería",
       });
     }
-    transaction.update(operacionRef, { estado: estadoNuevo, detalleEstado });
+    const huellaNueva = huellaAnterior
+      ? calcularHuellaVenta({ venta: datosOperacion, detalles: detallesActualizados })
+      : null;
+    transaction.update(operacionRef, {
+      estado: estadoNuevo,
+      detalleEstado,
+      ...(huellaNueva ? { estadisticas: huellaNueva } : {}),
+    });
 
     transaction.update(contadores.stockRef, contadores.asignacionStock.contador);
     transaction.update(
@@ -913,6 +1024,14 @@ export async function registrarCumplimiento({
       asignacionStock: contadores.asignacionStock,
       asignacionDetalles: contadores.asignacionDetalles,
     });
+    if (huellaNueva) {
+      aplicarDiferenciaEstadistica({
+        transaction,
+        acumulados: acumuladosVenta,
+        huellaAnterior,
+        huellaNueva,
+      });
+    }
   });
 }
 
@@ -964,6 +1083,21 @@ export async function anularOperacion({
     const contadores = detallesReingreso.length
       ? await leerContadoresMovimiento(transaction, detallesReingreso.length)
       : null;
+    const huellaAnterior = !esCompra && datosOperacion.estadisticas?.version
+      ? datosOperacion.estadisticas
+      : null;
+    const acumuladosVenta = huellaAnterior
+      ? await leerAcumuladosVenta(transaction, [huellaAnterior.canal])
+      : null;
+    const huellaNueva = huellaAnterior && reingresarVenta
+      ? calcularHuellaVenta({
+          venta: datosOperacion,
+          detalles: detalles.map((detalle) => ({
+            ...detalle.datos,
+            cumplimientos: [],
+          })),
+        })
+      : huellaAnterior;
 
     const movimientoDetalles = [];
     for (const detalle of detalles) {
@@ -1010,6 +1144,7 @@ export async function anularOperacion({
 
     transaction.update(operacionRef, {
       estado: ESTADOS_OPERACION.ANULADA,
+      ...(huellaNueva ? { estadisticas: huellaNueva } : {}),
       detalleEstado: [
         ...(datosOperacion.detalleEstado || []),
         {
@@ -1041,6 +1176,14 @@ export async function anularOperacion({
         },
         asignacionStock: contadores.asignacionStock,
         asignacionDetalles: contadores.asignacionDetalles,
+      });
+    }
+    if (huellaAnterior && reingresarVenta) {
+      aplicarDiferenciaEstadistica({
+        transaction,
+        acumulados: acumuladosVenta,
+        huellaAnterior,
+        huellaNueva,
       });
     }
   });

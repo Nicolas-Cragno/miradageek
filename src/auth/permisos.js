@@ -35,6 +35,7 @@ export const puedeAccederRuta = (usuario, ruta) => {
   if (!usuario) return false;
   if (ruta === "/productos") return true;
   if (ruta === "/usuarios") return puedeAdministrarUsuarios(usuario);
+  if (ruta === "/estadisticas") return puedeVerInformes(usuario);
   if (ruta === "/") return puedeVerInformes(usuario) || puedeGestionarOperaciones(usuario);
   if (["/clientes", "/proveedores"].includes(ruta)) {
     return puedeGestionarOperaciones(usuario);

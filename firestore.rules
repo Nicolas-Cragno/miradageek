@@ -7,7 +7,9 @@ service cloud.firestore {
     // clientes/proveedores: party/contact fields.
     // productos: description, prices, currencies, type and non-negative stock.
     // compras/ventas/stock: operation header with timestamp and references.
-    // detalle*: immutable operation lines referencing products and their parent.
+    // ventas may include canal and an internal monthly statistics footprint.
+    // detalleVentas snapshots historical cost and fulfillment events.
+    // canalesVentas: active catalog plus transactional accumulated statistics.
     // contadores: immutable id plus series/last-number state.
     function autenticado() {
       return request.auth != null;
@@ -42,6 +44,10 @@ service cloud.firestore {
     }
 
     function puedeAdministrarUsuarios() {
+      return usuarioActivo() && accesoActual().tipo in ['03', '04'];
+    }
+
+    function puedeVerEstadisticas() {
       return usuarioActivo() && accesoActual().tipo in ['03', '04'];
     }
 
@@ -192,7 +198,7 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly([
           'id', 'sucursal', referenceField, 'monto', 'detalle', 'datalle',
           'fecha', 'estado', 'moneda', 'parcial', 'descuento', 'valorDivisa',
-          'detalleEstado', 'ediciones'
+          'detalleEstado', 'ediciones', 'canal', 'estadisticas'
         ]) &&
         validText('id', 80) && validText('sucursal', 80) && validText(referenceField, 80) &&
         validText('detalle', 3000) && validText('datalle', 3000) && validText('estado', 40) &&
@@ -211,7 +217,48 @@ service cloud.firestore {
         (!('ediciones' in request.resource.data) ||
           (request.resource.data.ediciones is list &&
            request.resource.data.ediciones.size() <= 1000)) &&
+        (!('canal' in request.resource.data) ||
+          (request.resource.data.canal is string &&
+           request.resource.data.canal.size() > 0 &&
+           request.resource.data.canal.size() <= 40)) &&
+        (!('estadisticas' in request.resource.data) ||
+          (request.resource.data.estadisticas is map &&
+           request.resource.data.estadisticas.size() <= 12 &&
+           request.resource.data.estadisticas.keys().hasAll([
+             'version', 'contabilizable', 'canal', 'ventas',
+             'totalCostos', 'totalPrecios', 'meses'
+           ]) &&
+           request.resource.data.estadisticas.keys().hasOnly([
+             'version', 'contabilizable', 'canal', 'ventas',
+             'totalCostos', 'totalPrecios', 'meses', 'mesPrimeraVenta',
+             'ultimaVenta'
+           ]) &&
+           request.resource.data.estadisticas.version == 1 &&
+           request.resource.data.estadisticas.contabilizable is bool &&
+           request.resource.data.estadisticas.canal is string &&
+           request.resource.data.estadisticas.canal == request.resource.data.canal &&
+           request.resource.data.estadisticas.ventas is int &&
+           request.resource.data.estadisticas.ventas >= 0 &&
+           request.resource.data.estadisticas.ventas <= 1 &&
+           request.resource.data.estadisticas.totalCostos is number &&
+           request.resource.data.estadisticas.totalCostos >= 0 &&
+           request.resource.data.estadisticas.totalPrecios is number &&
+           request.resource.data.estadisticas.totalPrecios >= 0 &&
+           request.resource.data.estadisticas.meses is map &&
+           request.resource.data.estadisticas.meses.size() <= 240 &&
+           (!('mesPrimeraVenta' in request.resource.data.estadisticas) ||
+             (request.resource.data.estadisticas.mesPrimeraVenta is string &&
+              request.resource.data.estadisticas.mesPrimeraVenta.matches('^[0-9]{4}-(0[1-9]|1[0-2])$'))) &&
+           (!('ultimaVenta' in request.resource.data.estadisticas) ||
+             request.resource.data.estadisticas.ultimaVenta is timestamp))) &&
         validTimestamp('fecha');
+    }
+
+    function validCanalVentaSeleccionado() {
+      return request.resource.data.canal is string &&
+        request.resource.data.canal != 'CV-A0000' &&
+        exists(/databases/$(database)/documents/canalesVentas/$(request.resource.data.canal)) &&
+        getAfter(/databases/$(database)/documents/canalesVentas/$(request.resource.data.canal)).data.estado == true;
     }
 
     function validStockOperation() {
@@ -234,7 +281,8 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly([
           parentField, 'idProducto', 'cantidad', 'precio', 'moneda',
           'descripcion', 'detalle', 'fecha', 'cantidadCumplida', 'activo',
-          'ediciones'
+          'ediciones', 'costo', 'monedaCosto', 'valorDivisaCosto',
+          'costoEnPesos', 'cumplimientos'
         ]) &&
         validText(parentField, 80) && validText('idProducto', 80) &&
         validText('moneda', 20) && validText('descripcion', 500) &&
@@ -242,6 +290,13 @@ service cloud.firestore {
         validOptionalNumber('cantidad', 0.000001, 999999999) &&
         validOptionalNumber('precio', 0, 999999999999) &&
         validOptionalNumber('cantidadCumplida', 0, 999999999) &&
+        validOptionalNumber('costo', 0, 999999999999) &&
+        validText('monedaCosto', 20) &&
+        validOptionalNumber('valorDivisaCosto', 0.000001, 999999999) &&
+        validOptionalNumber('costoEnPesos', 0, 999999999999999) &&
+        (!('cumplimientos' in request.resource.data) ||
+          (request.resource.data.cumplimientos is list &&
+           request.resource.data.cumplimientos.size() <= 1000)) &&
         (!('activo' in request.resource.data) || request.resource.data.activo is bool) &&
         (!('ediciones' in request.resource.data) ||
           (request.resource.data.ediciones is list &&
@@ -261,6 +316,18 @@ service cloud.firestore {
         validOptionalNumber('stockAnterior', -999999999, 999999999) &&
         validOptionalNumber('cantidad', -999999999, 999999999) &&
         validText('tipo', 40) && validTimestamp('fecha');
+    }
+
+    function validSaleDetailSnapshot() {
+      return request.resource.data.keys().hasAll([
+          'costo', 'monedaCosto', 'valorDivisaCosto',
+          'costoEnPesos', 'cumplimientos'
+        ]) &&
+        request.resource.data.costo is number &&
+        request.resource.data.monedaCosto in ['ARS', 'USD'] &&
+        request.resource.data.valorDivisaCosto is number &&
+        request.resource.data.costoEnPesos is number &&
+        request.resource.data.cumplimientos is list;
     }
 
     match /usuarios/{userId} {
@@ -333,8 +400,12 @@ service cloud.firestore {
         (entidadPropia('proveedor') &&
          resource.data.proveedor == accesoActual().entidadId);
       allow create: if puedeGestionarOperaciones() && validOperation('proveedor') &&
+        !('canal' in request.resource.data) &&
+        !('estadisticas' in request.resource.data) &&
         (!('id' in request.resource.data) || request.resource.data.id == documentId);
       allow update: if puedeGestionarOperaciones() && validOperation('proveedor') &&
+        !('canal' in request.resource.data) &&
+        !('estadisticas' in request.resource.data) &&
         (!('id' in resource.data) || request.resource.data.id == resource.data.id);
       allow delete: if false;
     }
@@ -344,8 +415,16 @@ service cloud.firestore {
         (entidadPropia('cliente') &&
          resource.data.cliente == accesoActual().entidadId);
       allow create: if puedeGestionarOperaciones() && validOperation('cliente') &&
+        ('estadisticas' in request.resource.data) &&
+        request.resource.data.estadisticas.contabilizable == true &&
+        validCanalVentaSeleccionado() &&
         (!('id' in request.resource.data) || request.resource.data.id == documentId);
       allow update: if puedeGestionarOperaciones() && validOperation('cliente') &&
+        (!('estadisticas' in resource.data) ||
+         ('estadisticas' in request.resource.data &&
+          request.resource.data.estadisticas.contabilizable == true)) &&
+        (validCanalVentaSeleccionado() ||
+         (!('canal' in resource.data) && !('canal' in request.resource.data))) &&
         (!('id' in resource.data) || request.resource.data.id == resource.data.id);
       allow delete: if false;
     }
@@ -364,8 +443,16 @@ service cloud.firestore {
         (entidadPropia('proveedor') &&
          get(/databases/$(database)/documents/compras/$(resource.data.compra))
            .data.proveedor == accesoActual().entidadId);
-      allow create: if puedeGestionarOperaciones() && validDetail('compra');
+      allow create: if puedeGestionarOperaciones() && validDetail('compra') &&
+        !request.resource.data.keys().hasAny([
+          'costo', 'monedaCosto', 'valorDivisaCosto',
+          'costoEnPesos', 'cumplimientos'
+        ]);
       allow update: if puedeGestionarOperaciones() && validDetail('compra') &&
+        !request.resource.data.keys().hasAny([
+          'costo', 'monedaCosto', 'valorDivisaCosto',
+          'costoEnPesos', 'cumplimientos'
+        ]) &&
         request.resource.data.compra == resource.data.compra;
       allow delete: if false;
     }
@@ -375,8 +462,18 @@ service cloud.firestore {
         (entidadPropia('cliente') &&
          get(/databases/$(database)/documents/ventas/$(resource.data.venta))
            .data.cliente == accesoActual().entidadId);
-      allow create: if puedeGestionarOperaciones() && validDetail('venta');
+      allow create: if puedeGestionarOperaciones() && validDetail('venta') &&
+        validSaleDetailSnapshot();
       allow update: if puedeGestionarOperaciones() && validDetail('venta') &&
+        (validSaleDetailSnapshot() ||
+         (!resource.data.keys().hasAny([
+            'costo', 'monedaCosto', 'valorDivisaCosto',
+            'costoEnPesos', 'cumplimientos'
+          ]) &&
+          !request.resource.data.keys().hasAny([
+            'costo', 'monedaCosto', 'valorDivisaCosto',
+            'costoEnPesos', 'cumplimientos'
+          ]))) &&
         request.resource.data.venta == resource.data.venta;
       allow delete: if false;
     }
@@ -411,6 +508,46 @@ service cloud.firestore {
         ) &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['serie', 'ultimo']);
+    }
+
+    function validCanalVenta(documentId) {
+      return request.resource.data.keys().hasAll(['id', 'nombre', 'estado']) &&
+        request.resource.data.keys().hasOnly([
+          'id', 'nombre', 'estado', 'ventas', 'totalCostos', 'totalPrecios',
+          'ultimaVenta', 'meses'
+        ]) &&
+        request.resource.data.id == documentId &&
+        request.resource.data.id is string &&
+        request.resource.data.id.matches('^CV-A[0-9]{4}$') &&
+        request.resource.data.nombre is string &&
+        request.resource.data.nombre.size() > 0 &&
+        request.resource.data.nombre.size() <= 160 &&
+        request.resource.data.estado is bool &&
+        validOptionalNumber('ventas', 0, 999999999) &&
+        validOptionalNumber('totalCostos', 0, 999999999999999) &&
+        validOptionalNumber('totalPrecios', 0, 999999999999999) &&
+        validTimestamp('ultimaVenta') &&
+        (!('meses' in request.resource.data) ||
+          (request.resource.data.meses is map &&
+           request.resource.data.meses.size() <= 240));
+    }
+
+    match /canalesVentas/{documentId} {
+      allow read: if puedeVerEstadisticas() ||
+        (esRol('02') && documentId != 'CV-A0000' && resource.data.estado == true);
+      allow create, delete: if false;
+      allow update: if puedeGestionarOperaciones() && validCanalVenta(documentId) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.nombre == resource.data.nombre &&
+        request.resource.data.estado == resource.data.estado &&
+        (
+          (documentId == 'CV-A0000' &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['meses'])) ||
+          (documentId != 'CV-A0000' &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'ventas', 'totalCostos', 'totalPrecios', 'ultimaVenta'
+           ]))
+        );
     }
 
     match /{document=**} {

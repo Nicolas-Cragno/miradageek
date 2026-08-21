@@ -53,6 +53,7 @@ export async function guardarOperacion({
   usuario = "",
   sucursalesDisponibles = [],
   permitirNegativo = false,
+  cotizacionCosto = null,
 }) {
   if (["compras", "ventas"].includes(collectionName)) {
     return guardarOperacionNucleo({
@@ -66,6 +67,7 @@ export async function guardarOperacion({
       usuario,
       sucursalesDisponibles,
       permitirNegativo,
+      cotizacionCosto,
     });
   }
   if (collectionName === "stock") {

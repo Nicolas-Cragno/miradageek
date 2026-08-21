@@ -45,7 +45,9 @@ export default function InputForm({
 
       {input === "select" && (
         <SearchableSelect
-          options={data[options] || []}
+          options={(data[options] || []).filter(
+            (option) => !(campo.excludeIds || []).includes(option.id),
+          )}
           value={value ?? ""}
           placeholder={`Buscar ${label.toLocaleLowerCase("es")}...`}
           onChange={(newValue) => onChange(key, newValue)}

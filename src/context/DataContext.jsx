@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import {
+  collection,
+  documentId,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { showError } from "../utils/alerts";
 
@@ -40,17 +46,21 @@ export function DataProvider({ children, collections: requestedCollections = [] 
       const nombreColeccion =
         typeof configuracion === "string" ? configuracion : configuracion.nombre;
       const referencia = collection(db, nombreColeccion);
-      const consulta =
-        typeof configuracion === "string" || !configuracion.filtro
-          ? referencia
-          : query(
-              referencia,
+      const filtros = typeof configuracion === "string"
+        ? []
+        : configuracion.filtros || (configuracion.filtro ? [configuracion.filtro] : []);
+      const consulta = filtros.length
+        ? query(
+            referencia,
+            ...filtros.map((filtro) =>
               where(
-                configuracion.filtro.campo,
-                "==",
-                configuracion.filtro.valor,
+                filtro.campo === "__name__" ? documentId() : filtro.campo,
+                filtro.operador || "==",
+                filtro.valor,
               ),
-            );
+            ),
+          )
+        : referencia;
 
       return (
       onSnapshot(

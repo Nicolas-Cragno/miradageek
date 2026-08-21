@@ -1,0 +1,110 @@
+.estadisticas {
+  padding: clamp(20px, 4vw, 48px);
+  width: 100%;
+  color: var(--color-text);
+}
+
+.stats-header,
+.stats-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.stats-header h1,
+.stats-summary h2,
+.stats-card h2 {
+  margin: 0;
+}
+
+.stats-header > span,
+.stats-eyebrow,
+.stats-last-sale {
+  color: var(--color-border);
+}
+
+.stats-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stats-summary,
+.stats-card {
+  margin-top: 24px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+
+.stats-summary {
+  border-color: var(--color-title);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 22px 0 0;
+}
+
+.stats-card .stats-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stats-metrics div {
+  min-width: 0;
+}
+
+.stats-metrics dt {
+  font-size: 0.85rem;
+  color: var(--color-border);
+}
+
+.stats-metrics dd {
+  margin: 5px 0 0;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.stats-card-title span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--color-border);
+}
+
+.stats-last-sale {
+  margin: 22px 0 0;
+}
+
+.stats-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .estadisticas {
+    padding: 18px 14px 90px;
+  }
+
+  .stats-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stats-summary .stats-metrics,
+  .stats-card .stats-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+}

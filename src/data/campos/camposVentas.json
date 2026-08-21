@@ -62,6 +62,27 @@
     "dato" : "string"
   },
   {
+    "key": "labelCanal",
+    "label": "Canal de venta",
+    "tabla": true,
+    "ficha": true,
+    "form": false,
+    "input": "disabled",
+    "dato": "string"
+  },
+  {
+    "key": "canal",
+    "label": "Canal de venta",
+    "tabla": false,
+    "ficha": false,
+    "form": true,
+    "input": "select",
+    "options": "canalesVentas",
+    "excludeIds": ["CV-A0000"],
+    "use": "database",
+    "dato": "string"
+  },
+  {
     "key": "labelMonto",
     "label": "Monto",
     "tabla": true,

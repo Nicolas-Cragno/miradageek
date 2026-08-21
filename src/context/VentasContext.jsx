@@ -9,7 +9,7 @@ import { estadoVisible } from "../functions/operaciones/modeloOperaciones";
 const VentasContext = createContext();
 
 export function VentasProvider({ children }) {
-  const { ventas = [], clientes = [], sucursales = [] } = useData();
+  const { ventas = [], clientes = [], sucursales = [], canalesVentas = [] } = useData();
   const { detalleVentas = [] } = useDetalleVentas();
 
   const ventasEnriquecidos = useMemo(() => {
@@ -19,6 +19,7 @@ export function VentasProvider({ children }) {
       const estado = estados.find((st) => st.key === estadoOperacion);
       const cli = clientes.find((pv) => pv.id === cp.cliente);
       const sucu = sucursales.find((sc) => sc.id === cp.sucursal);
+      const canal = canalesVentas.find((item) => item.id === cp.canal);
       const date = formatearCampoFirestore(cp.fecha);
       const lbl = `${date} | ${cli?.nombre || ""} (${estado?.label})`;
       const detalles = detalleVentas.filter((dc) => dc.venta === cp.id);
@@ -30,12 +31,13 @@ export function VentasProvider({ children }) {
         labelMonto: `${monedaCosto?.simbolo || "$"} ${cp.monto ?? 0}`,
         labelCliente: cli?.nombre || "",
         labelSucursal: sucu?.nombre || "",
+        labelCanal: canal?.nombre || (cp.canal ? cp.canal : "Otros"),
         estado: estadoOperacion,
         labelEstado: estado?.label || estadoOperacion,
         label: lbl,
       };
     });
-  }, [ventas, detalleVentas, clientes, sucursales]);
+  }, [ventas, detalleVentas, clientes, sucursales, canalesVentas]);
 
   return (
     <VentasContext.Provider value={{ ventas: ventasEnriquecidos }}>

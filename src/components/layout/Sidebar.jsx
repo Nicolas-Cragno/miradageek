@@ -8,6 +8,7 @@ import { FaCashRegister } from "react-icons/fa";
 import { IoCash } from "react-icons/io5";
 import LogoutButton from "./LogoutButton";
 import { FaUsers } from "react-icons/fa";
+import { FaChartLine } from "react-icons/fa";
 import { useAuth } from "../../auth/AuthContext";
 import {
   puedeAccederRuta,
@@ -62,6 +63,14 @@ export default function Sidebar({ open, setOpen }) {
             <FaUsers className="nav-logo" />
             <span className={`nav-text ${!open ? "hidden" : ""}`}>
               Usuarios
+            </span>
+          </NavLink>
+        )}
+        {mostrar("/estadisticas") && (
+          <NavLink to="/estadisticas" className="nav-item">
+            <FaChartLine className="nav-logo" />
+            <span className={`nav-text ${!open ? "hidden" : ""}`}>
+              Estadísticas
             </span>
           </NavLink>
         )}

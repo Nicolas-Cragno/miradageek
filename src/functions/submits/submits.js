@@ -12,6 +12,7 @@ export async function submit({
   usuario = "",
   sucursalesDisponibles = [],
   permitirNegativo = false,
+  cotizacionCosto = null,
 }) {
   const data = {};
 
@@ -36,6 +37,7 @@ export async function submit({
     usuario,
     sucursalesDisponibles,
     permitirNegativo,
+    cotizacionCosto,
   });
 
   return idReturn;

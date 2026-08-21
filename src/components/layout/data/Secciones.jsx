@@ -5,6 +5,7 @@ import { LuBaggageClaim as ProviderLogo } from "react-icons/lu";
 import { FaCashRegister } from "react-icons/fa";
 import { IoCash } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
+import { FaChartLine } from "react-icons/fa";
 
 export const linksElements = [
   {
@@ -16,6 +17,11 @@ export const linksElements = [
     to: "/usuarios",
     icon: <FaUsers className="nav-icon" size={50} />,
     label: "Usuarios",
+  },
+  {
+    to: "/estadisticas",
+    icon: <FaChartLine className="nav-icon" size={50} />,
+    label: "Estadísticas",
   },
   {
     to: "/clientes",
