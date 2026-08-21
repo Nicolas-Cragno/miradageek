@@ -37,6 +37,20 @@
     "dato": "number"
   },
   {
+    "key": "monedaCosto",
+    "label": "Moneda del costo",
+    "ficha": false,
+    "form": true,
+    "input": "staticSelect",
+    "default": "ARS",
+    "values": [
+      { "value": "ARS", "label": "Pesos (ARS)" },
+      { "value": "USD", "label": "Dólares (USD)" }
+    ],
+    "use": "database",
+    "dato": "string"
+  },
+  {
     "key": "labelCosto",
     "label": "Costo",
     "ficha": true,
@@ -51,6 +65,20 @@
     "input": "number",
     "use": "database",
     "dato": "number"
+  },
+  {
+    "key": "monedaPrecio",
+    "label": "Moneda del precio",
+    "ficha": false,
+    "form": true,
+    "input": "staticSelect",
+    "default": "ARS",
+    "values": [
+      { "value": "ARS", "label": "Pesos (ARS)" },
+      { "value": "USD", "label": "Dólares (USD)" }
+    ],
+    "use": "database",
+    "dato": "string"
   },
   {
     "key": "labelPrecio",

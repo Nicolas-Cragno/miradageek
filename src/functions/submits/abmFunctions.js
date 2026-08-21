@@ -130,8 +130,21 @@ export async function guardarOperacion({
     }
 
     const operationRef = doc(db, collectionName, operationId);
-    if (idElemento) transaction.update(operationRef, data);
-    else transaction.set(operationRef, data);
+    const datosGuardado =
+      collectionName === "productos" && !idElemento
+        ? {
+            ...data,
+            stock: 0,
+            pendiente: 0,
+            reservado: 0,
+            stockSucursal: sucursalesDisponibles.map((sucursal) => ({
+              sucursal,
+              stock: 0,
+            })),
+          }
+        : data;
+    if (idElemento) transaction.update(operationRef, datosGuardado);
+    else transaction.set(operationRef, datosGuardado);
 
     for (const previousDetail of detalleOriginal) {
       if (previousDetail.id && detailCollection) {

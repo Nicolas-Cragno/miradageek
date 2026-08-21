@@ -16,10 +16,10 @@
   left: 0;
   max-height: 240px;
   overflow-y: auto;
-  border: 1px solid var(--color-shadow);
+  border: 1px solid var(--color-surface);
   border-radius: 8px;
-  background: var(--color-back);
-  box-shadow: 0 10px 30px var(--color-shadow);
+  background: var(--color-white);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--color-surface) 25%, transparent);
 }
 
 .searchable-options button,
@@ -30,10 +30,10 @@
   padding: 10px 12px;
   border: 0;
   background: transparent;
-  color: var(--color-text);
+  color: #111;
   text-align: left;
 }
 
 .searchable-options button:hover {
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 12%, white);
 }

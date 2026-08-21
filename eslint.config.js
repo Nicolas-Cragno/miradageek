@@ -33,4 +33,13 @@ export default defineConfig([
       'no-console': 'off',
     },
   },
+  {
+    files: ['functions/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 ])

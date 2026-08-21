@@ -73,8 +73,8 @@ service cloud.firestore {
            request.resource.data.entidadId.size() > 0 &&
            request.resource.data.entidadId.size() <= 80) ||
           (request.resource.data.tipo != '01' &&
-           request.resource.data.get('entidadTipo', '') == '' &&
-           request.resource.data.get('entidadId', '') == '')
+           request.resource.data.get('entidadTipo', null) == null &&
+           request.resource.data.get('entidadId', null) == null)
         );
     }
 
@@ -96,6 +96,16 @@ service cloud.firestore {
         request.resource.data.mail.size() <= 254 &&
         request.resource.data.tipo in ['01', '02', '03', '04'] &&
         request.resource.data.estado is bool &&
+        (
+          (request.resource.data.tipo == '01' &&
+           request.resource.data.entidadTipo in ['cliente', 'proveedor'] &&
+           request.resource.data.entidadId is string &&
+           request.resource.data.entidadId.size() > 0 &&
+           request.resource.data.entidadId.size() <= 80) ||
+          (request.resource.data.tipo != '01' &&
+           request.resource.data.get('entidadTipo', null) == null &&
+           request.resource.data.get('entidadId', null) == null)
+        ) &&
         validTimestamp('fecha');
     }
 
@@ -258,10 +268,7 @@ service cloud.firestore {
         (accesoActual().usuarioId == userId || puedeAdministrarUsuarios());
       allow list: if puedeAdministrarUsuarios() ||
         (usuarioActivo() && resource.data.uid == request.auth.uid);
-      allow create: if puedeAdministrarUsuarios() && validUser() &&
-        request.resource.data.id == userId &&
-        puedeGestionarRol('', request.resource.data.tipo) &&
-        usuarioYAccesoSincronizados(userId, request.resource.data.uid);
+      allow create: if false;
       allow update: if puedeAdministrarUsuarios() && validUser() &&
         request.resource.data.id == resource.data.id &&
         request.resource.data.uid == resource.data.uid &&
@@ -275,9 +282,7 @@ service cloud.firestore {
         (autenticado() && request.auth.uid == accessId &&
          resource.data.estado == true);
       allow list: if puedeAdministrarUsuarios();
-      allow create: if puedeAdministrarUsuarios() && validAccess() &&
-        puedeGestionarRol('', request.resource.data.tipo) &&
-        usuarioYAccesoSincronizados(request.resource.data.usuarioId, accessId);
+      allow create: if false;
       allow update: if puedeAdministrarUsuarios() && validAccess() &&
         request.resource.data.usuarioId == resource.data.usuarioId &&
         puedeGestionarRol(resource.data.tipo, request.resource.data.tipo) &&
@@ -387,8 +392,7 @@ service cloud.firestore {
       allow read: if puedeGestionarOperaciones() || puedeAdministrarUsuarios();
       allow create, delete: if false;
       allow update: if
-        ((counterId == 'usuarios' && puedeAdministrarUsuarios()) ||
-         (counterId != 'usuarios' && puedeGestionarOperaciones())) &&
+        counterId != 'usuarios' && puedeGestionarOperaciones() &&
         request.resource.data.keys().hasOnly(['id', 'serie', 'ultimo']) &&
         validText('id', 80) &&
         (!('id' in resource.data) || request.resource.data.id == resource.data.id) &&

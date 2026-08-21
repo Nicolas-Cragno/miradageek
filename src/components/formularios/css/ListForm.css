@@ -5,10 +5,11 @@
 
   margin-top: 20px;
 
-  border: 1px solid var(--color-shadow);
+  border: 1px solid var(--color-surface);
   border-radius: 10px;
 
-  background: var(--color-back);
+  background: var(--color-white);
+  color: #111;
 }
 
 .listform-header {
@@ -75,7 +76,10 @@
 .listform-table input {
   width: 100%;
   padding: 6px;
+  border: 1px solid var(--color-surface);
   border-radius: 6px;
+  background: var(--color-white);
+  color: #111;
 }
 
 .listform-total {

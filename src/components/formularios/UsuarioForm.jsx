@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthContext";
 import { useData } from "../../context/DataContext";
-import { esDesarrollador, ROLES } from "../../auth/permisos";
-import { guardarUsuarioAdministrado } from "../../services/usuariosService";
+import {
+  ENTIDADES_USUARIO,
+  esDesarrollador,
+  ROLES,
+  TIPOS_ENTIDAD_USUARIO,
+} from "../../auth/permisos";
+import {
+  crearUsuarioAdministrado,
+  guardarUsuarioAdministrado,
+} from "../../services/usuariosService";
 import { showError, showSuccess } from "../../utils/alerts";
 import SearchableSelect from "../inputs/SearchableSelect";
 import Loading from "../../routes/Loading";
@@ -21,8 +29,10 @@ const datosIniciales = {
   mail: "",
   tipo: "01",
   estado: true,
-  entidadTipo: "cliente",
-  entidadId: "",
+  entidadTipo: null,
+  entidadId: null,
+  password: "",
+  confirmarPassword: "",
 };
 
 export default function UsuarioForm({ open, item, onClose, onSave }) {
@@ -41,8 +51,12 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
             mail: item.mail ?? "",
             tipo: item.tipo ?? "01",
             estado: item.estado === true,
-            entidadTipo: item.entidadTipo || "cliente",
-            entidadId: item.entidadId || "",
+            entidadTipo:
+              item.tipo === ROLES.USUARIO ? item.entidadTipo ?? null : null,
+            entidadId:
+              item.tipo === ROLES.USUARIO ? item.entidadId ?? null : null,
+            password: "",
+            confirmarPassword: "",
           }
         : datosIniciales,
     );
@@ -55,21 +69,51 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
       ),
     [user],
   );
-  const entidades = datos.entidadTipo === "cliente" ? clientes : proveedores;
+  const entidades =
+    datos.entidadTipo === ENTIDADES_USUARIO.CLIENTE
+      ? clientes
+      : datos.entidadTipo === ENTIDADES_USUARIO.PROVEEDOR
+        ? proveedores
+        : [];
 
   if (!open) return null;
 
   const cambiar = (campo, valor) =>
     setDatos((actual) => ({ ...actual, [campo]: valor }));
 
+  const cambiarRol = (tipo) =>
+    setDatos((actual) => ({
+      ...actual,
+      tipo,
+      entidadTipo: null,
+      entidadId: null,
+    }));
+
   const guardar = async (event) => {
     event.preventDefault();
 
-    if (!datos.nombre.trim() || !datos.mail.trim() || !datos.uid.trim()) {
-      await showError("Datos incompletos", "UID, nombre y correo son obligatorios.");
+    if (!datos.nombre.trim() || !datos.mail.trim()) {
+      await showError("Datos incompletos", "Nombre y correo son obligatorios.");
       return;
     }
-    if (datos.tipo === ROLES.USUARIO && !datos.entidadId) {
+    if (!item && datos.password.length < 8) {
+      await showError(
+        "Contraseña débil",
+        "La contraseña debe tener al menos 8 caracteres.",
+      );
+      return;
+    }
+    if (!item && datos.password !== datos.confirmarPassword) {
+      await showError(
+        "Contraseñas diferentes",
+        "Las contraseñas no coinciden.",
+      );
+      return;
+    }
+    if (
+      datos.tipo === ROLES.USUARIO &&
+      (!TIPOS_ENTIDAD_USUARIO.includes(datos.entidadTipo) || !datos.entidadId)
+    ) {
       await showError(
         "Relación obligatoria",
         "Seleccioná el cliente o proveedor relacionado.",
@@ -89,12 +133,13 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
 
     setGuardando(true);
     try {
-      await guardarUsuarioAdministrado(datos, item);
+      if (item) await guardarUsuarioAdministrado(datos, item);
+      else await crearUsuarioAdministrado(datos);
       await showSuccess(
         item ? "Usuario actualizado" : "Usuario registrado",
         item
           ? "Los datos y permisos quedaron sincronizados."
-          : "Se creó el usuario interno. La credencial debe existir previamente en Firebase Authentication.",
+          : "Se crearon la credencial y el acceso interno correctamente.",
       );
       onSave?.();
       onClose?.();
@@ -114,20 +159,20 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-form" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
-          <button type="button" className="modal-close" onClick={onClose}>✕</button>
+          <button type="button" className="modal-close" onClick={onClose}>
+            ✕
+          </button>
           <h2>{item ? "Editar usuario" : "Nuevo usuario interno"}</h2>
           <div className="modal-spacer" />
         </div>
         <form onSubmit={guardar}>
           <div className="form-grid">
-            <div className="form-group">
-              <label>UID de Firebase Authentication</label>
-              <input
-                value={datos.uid}
-                disabled={Boolean(item)}
-                onChange={(event) => cambiar("uid", event.target.value)}
-              />
-            </div>
+            {item && (
+              <div className="form-group">
+                <label>UID de Firebase Authentication</label>
+                <input value={datos.uid} disabled />
+              </div>
+            )}
             <div className="form-group">
               <label>Nombre</label>
               <input
@@ -143,14 +188,42 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
                 onChange={(event) => cambiar("mail", event.target.value)}
               />
             </div>
+            {!item && (
+              <>
+                <div className="form-group">
+                  <label>Contraseña</label>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    value={datos.password}
+                    onChange={(event) =>
+                      cambiar("password", event.target.value)
+                    }
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Confirmar contraseña</label>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    value={datos.confirmarPassword}
+                    onChange={(event) =>
+                      cambiar("confirmarPassword", event.target.value)
+                    }
+                  />
+                </div>
+              </>
+            )}
             <div className="form-group">
               <label>Rol</label>
               <select
                 value={datos.tipo}
-                onChange={(event) => cambiar("tipo", event.target.value)}
+                onChange={(event) => cambiarRol(event.target.value)}
               >
                 {opcionesRoles.map(([tipo, nombre]) => (
-                  <option key={tipo} value={tipo}>{tipo} — {nombre}</option>
+                  <option key={tipo} value={tipo}>
+                    {tipo} — {nombre}
+                  </option>
                 ))}
               </select>
             </div>
@@ -158,7 +231,9 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
               <label>Estado</label>
               <select
                 value={String(datos.estado)}
-                onChange={(event) => cambiar("estado", event.target.value === "true")}
+                onChange={(event) =>
+                  cambiar("estado", event.target.value === "true")
+                }
               >
                 <option value="true">Activo</option>
                 <option value="false">Inactivo</option>
@@ -169,24 +244,25 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
                 <div className="form-group">
                   <label>Tipo de entidad</label>
                   <select
-                    value={datos.entidadTipo}
+                    value={datos.entidadTipo ?? ""}
                     onChange={(event) =>
                       setDatos((actual) => ({
                         ...actual,
                         entidadTipo: event.target.value,
-                        entidadId: "",
+                        entidadId: null,
                       }))
                     }
                   >
-                    <option value="cliente">Cliente</option>
-                    <option value="proveedor">Proveedor</option>
+                    <option value="">Seleccioná un tipo</option>
+                    <option value={ENTIDADES_USUARIO.CLIENTE}>Cliente</option>
+                    <option value={ENTIDADES_USUARIO.PROVEEDOR}>Proveedor</option>
                   </select>
                 </div>
                 <div className="form-group">
                   <label>Entidad relacionada</label>
                   <SearchableSelect
                     options={entidades}
-                    value={datos.entidadId}
+                    value={datos.entidadId ?? ""}
                     onChange={(valor) => cambiar("entidadId", valor)}
                   />
                 </div>
@@ -198,7 +274,7 @@ export default function UsuarioForm({ open, item, onClose, onSave }) {
               Cancelar
             </button>
             <button type="submit" className="btn-primary">
-              {item ? "Guardar" : "Crear documento"}
+              {item ? "Guardar" : "Crear usuario"}
             </button>
           </div>
         </form>

@@ -7,12 +7,15 @@ import Loading from "../../routes/Loading";
 import {
   showConfirmation,
   showError,
+  showInitialStockConfirmation,
+  showInitialStockForm,
   showSuccess,
 } from "../../utils/alerts";
 import { useAuth } from "../../auth/AuthContext";
 import { useData } from "../../context/DataContext";
 import { calcularMontos, ESTADOS_OPERACION } from "../../functions/operaciones/modeloOperaciones";
-import { obtenerVentaDolarOficial } from "../../services/dolarService";
+import { obtenerValorDivisa } from "../../services/dolarService";
+import { guardarMovimientoManual } from "../../functions/operaciones/operacionesService";
 
 export default function Form({
   open = false,
@@ -32,6 +35,7 @@ export default function Form({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [cotizacionWarning, setCotizacionWarning] = useState("");
+  const [cotizacionUsd, setCotizacionUsd] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -93,9 +97,16 @@ export default function Form({
     if (!open || item || !["compras", "ventas"].includes(collection)) return;
     let activo = true;
     setCotizacionWarning("");
-    obtenerVentaDolarOficial()
+    obtenerValorDivisa("USD")
       .then((venta) => {
-        if (activo) setFormData((previo) => ({ ...previo, valorDivisa: venta }));
+        if (activo) {
+          setCotizacionUsd(venta);
+          setFormData((previo) =>
+            previo.moneda === "USD" && !(Number(previo.valorDivisa) > 0)
+              ? { ...previo, valorDivisa: venta }
+              : previo,
+          );
+        }
       })
       .catch(() => {
         if (activo) {
@@ -125,21 +136,38 @@ export default function Form({
       if (key !== "moneda" || !["ARS", "USD"].includes(value)) {
         return { ...prev, [key]: value };
       }
+      if (prev.moneda === value) return prev;
       const campoDetalle = campos.find((campo) => campo.use === "detailDatabase");
-      if (!campoDetalle || prev.moneda === value) return { ...prev, moneda: value };
-      const cotizacion = Number(prev.valorDivisa);
+      const cotizacion = Number(
+        value === "USD" ? cotizacionUsd : prev.valorDivisa,
+      );
       if (!Number.isFinite(cotizacion) || cotizacion <= 0) {
-        return { ...prev, moneda: value };
+        setCotizacionWarning(
+          "No se pudo obtener el dólar oficial. Podés ingresar la cotización manualmente.",
+        );
+        return {
+          ...prev,
+          moneda: value,
+          valorDivisa: value === "ARS" ? 1 : "",
+        };
       }
-      const detalles = (prev[campoDetalle.key] || []).map((detalle) => ({
-        ...detalle,
-        precio:
-          prev.moneda === "USD" && value === "ARS"
-            ? Number(detalle.precio) * cotizacion
-            : Number(detalle.precio) / cotizacion,
+      setCotizacionWarning("");
+      const detalles = campoDetalle
+        ? (prev[campoDetalle.key] || []).map((detalle) => ({
+            ...detalle,
+            precio:
+              prev.moneda === "USD" && value === "ARS"
+                ? Number(detalle.precio) * cotizacion
+                : Number(detalle.precio) / cotizacion,
+            moneda: value,
+          }))
+        : [];
+      return {
+        ...prev,
         moneda: value,
-      }));
-      return { ...prev, moneda: value, [campoDetalle.key]: detalles };
+        valorDivisa: value === "ARS" ? 1 : cotizacion,
+        ...(campoDetalle ? { [campoDetalle.key]: detalles } : {}),
+      };
     });
   }
 
@@ -172,6 +200,15 @@ export default function Form({
         await showError("Descuento inválido", "El descuento debe estar entre 0 y 100.");
         return;
       }
+      const moneda = formData.moneda || "ARS";
+      const valorDivisa = moneda === "ARS" ? 1 : Number(formData.valorDivisa);
+      if (moneda === "USD" && (!Number.isFinite(valorDivisa) || valorDivisa <= 0)) {
+        await showError(
+          "Cotización obligatoria",
+          "Ingresá el valor histórico del dólar en pesos para esta operación.",
+        );
+        return;
+      }
     }
 
     setSaving(true);
@@ -182,6 +219,12 @@ export default function Form({
       camposForm.forEach((c) => {
         mainData[c.key] = formData[c.key];
       });
+
+      if (["compras", "ventas"].includes(collection)) {
+        mainData.valorDivisa = formData.moneda === "USD"
+          ? Number(formData.valorDivisa)
+          : 1;
+      }
 
       return submit({
         collection,
@@ -211,8 +254,9 @@ export default function Form({
         return;
       }
 
+      let idGuardado;
       try {
-        await ejecutarGuardado(false);
+        idGuardado = await ejecutarGuardado(false);
       } catch (error) {
         if (error?.code !== "stock-negativo") throw error;
         const confirmado = await showConfirmation(
@@ -224,10 +268,46 @@ export default function Form({
           setSaving(false);
           return;
         }
-        await ejecutarGuardado(true);
+        idGuardado = await ejecutarGuardado(true);
       }
 
       setSaving(false);
+
+      if (!item && collection === "productos") {
+        const ingresarStock = await showInitialStockConfirmation();
+        if (ingresarStock) {
+          const stockInicial = await showInitialStockForm(sucursales);
+          if (stockInicial) {
+            try {
+              await guardarMovimientoManual({
+                data: {
+                  tipo: "INGRESO",
+                  sucursal: stockInicial.sucursal,
+                  detalle: "Stock inicial",
+                  origenTipo: "stockInicial",
+                  origenId: idGuardado,
+                },
+                detalles: [
+                  {
+                    idProducto: idGuardado,
+                    descripcion: formData.descripcion || "",
+                    diferencia: stockInicial.cantidad,
+                  },
+                ],
+                usuario: user?.id || "",
+                sucursalesDisponibles: sucursales.map((sucursal) => sucursal.id),
+              });
+            } catch (error) {
+              await showError(
+                "Producto creado sin stock inicial",
+                error instanceof Error
+                  ? error.message
+                  : "No se pudo registrar el ingreso inicial.",
+              );
+            }
+          }
+        }
+      }
 
       await showSuccess(
         item ? "Cambios guardados" : "Registro creado",

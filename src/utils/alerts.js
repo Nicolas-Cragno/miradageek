@@ -37,6 +37,73 @@ export async function showConfirmation(
   return result.isConfirmed;
 }
 
+export async function showInitialStockConfirmation() {
+  const resultado = await Swal.fire({
+    ...theme,
+    icon: "question",
+    title: "¿Querés ingresar stock inicial?",
+    text: "Usá esta opción únicamente si el producto ya existe físicamente y no corresponde registrarlo mediante una compra.",
+    showCancelButton: true,
+    confirmButtonText: "Sí",
+    cancelButtonText: "No",
+    reverseButtons: true,
+  });
+
+  return resultado.isConfirmed;
+}
+
+export async function showInitialStockForm(sucursales = []) {
+  const contenedor = document.createElement("div");
+  contenedor.className = "swal-stock-inicial";
+
+  const etiquetaCantidad = document.createElement("label");
+  etiquetaCantidad.textContent = "Cantidad";
+  const cantidad = document.createElement("input");
+  cantidad.type = "number";
+  cantidad.min = "0.000001";
+  cantidad.step = "any";
+  cantidad.placeholder = "Cantidad mayor a cero";
+
+  const etiquetaSucursal = document.createElement("label");
+  etiquetaSucursal.textContent = "Sucursal";
+  const sucursal = document.createElement("select");
+  const opcionVacia = document.createElement("option");
+  opcionVacia.value = "";
+  opcionVacia.textContent = "Seleccioná una sucursal";
+  sucursal.append(opcionVacia);
+  sucursales.forEach((item) => {
+    const opcion = document.createElement("option");
+    opcion.value = item.id;
+    opcion.textContent = item.nombre || item.label || item.id;
+    sucursal.append(opcion);
+  });
+
+  contenedor.append(etiquetaCantidad, cantidad, etiquetaSucursal, sucursal);
+
+  const resultado = await Swal.fire({
+    ...theme,
+    title: "Stock inicial",
+    html: contenedor,
+    showCancelButton: true,
+    confirmButtonText: "Registrar ingreso",
+    cancelButtonText: "Cancelar",
+    preConfirm: () => {
+      const valorCantidad = Number(cantidad.value);
+      if (!Number.isFinite(valorCantidad) || valorCantidad <= 0) {
+        Swal.showValidationMessage("Ingresá una cantidad mayor a cero.");
+        return false;
+      }
+      if (!sucursal.value) {
+        Swal.showValidationMessage("Seleccioná una sucursal.");
+        return false;
+      }
+      return { cantidad: valorCantidad, sucursal: sucursal.value };
+    },
+  });
+
+  return resultado.isConfirmed ? resultado.value : null;
+}
+
 export function authErrorMessage(code) {
   const messages = {
     "auth/invalid-credential": "El correo o la contraseña no son correctos.",

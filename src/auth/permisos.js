@@ -5,6 +5,13 @@ export const ROLES = {
   DESARROLLADOR: "04",
 };
 
+export const ENTIDADES_USUARIO = {
+  CLIENTE: "cliente",
+  PROVEEDOR: "proveedor",
+};
+
+export const TIPOS_ENTIDAD_USUARIO = Object.values(ENTIDADES_USUARIO);
+
 export const esUsuarioExterno = (usuario) => usuario?.tipo === ROLES.USUARIO;
 
 export const puedeGestionarOperaciones = (usuario) =>

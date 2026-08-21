@@ -295,8 +295,8 @@ export async function guardarMovimientoManual({
         sucursal: data.sucursal,
         detalle: data.detalle || "Movimiento manual",
         usuario,
-        origenTipo: "manual",
-        origenId: "",
+        origenTipo: data.origenTipo || "manual",
+        origenId: data.origenId || "",
         detalles: movimientoDetalles,
       },
       asignacionStock: contadores.asignacionStock,
@@ -508,14 +508,19 @@ export async function guardarOperacionNucleo({
 
     const estado = estadoSegunDetalles(nuevosNormalizados);
     const { parcial, monto } = calcularMontos(nuevosNormalizados, data.descuento);
+    const moneda = data.moneda || "ARS";
+    const valorDivisa = moneda === "ARS" ? 1 : numeroSeguro(data.valorDivisa);
+    if (moneda === "USD" && valorDivisa <= 0) {
+      throw new Error("Ingresá una cotización del dólar mayor a cero.");
+    }
     const datosOperacion = {
       ...data,
       estado,
       parcial,
       monto,
       descuento: numeroSeguro(data.descuento),
-      valorDivisa: numeroSeguro(data.valorDivisa),
-      moneda: data.moneda || "ARS",
+      valorDivisa,
+      moneda,
     };
     delete datosOperacion.fecha;
 
