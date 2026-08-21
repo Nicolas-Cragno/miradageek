@@ -107,13 +107,16 @@ export default function Section({
               <div className="section-header-buttons">
                 {buttonStock && puedeGestionar && (
                   <>
-                    <TextButton text={"Transferir"} onClick={() => setTransferenciaOpen(true)} />
+                    <TextButton
+                      text={"Transferir"}
+                      onClick={() => setTransferenciaOpen(true)}
+                    />
                     <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
                   </>
                 )}
-                {puedeGestionar && (
+                {puedeGestionar && permitirAlta && (
                   <TextButton
-                    text={permitirAlta ? "+ Nuevo" : "+ Nuevo — Próximamente"}
+                    text={"Nuevo usuario"}
                     onClick={nuevo}
                     disabled={!permitirAlta}
                     title={!permitirAlta ? mensajeAltaDeshabilitada : undefined}
@@ -170,16 +173,19 @@ export default function Section({
           <div className="section-list">
             <div className="section-header ">
               <h1>{title}</h1>
-              {puedeGestionar && (
+              {puedeGestionar && permitirAlta && (
                 <TextButton
-                  text={permitirAlta ? "+ Nuevo" : "+ Nuevo — Próximamente"}
+                  text={"Nuevo usuario"}
                   onClick={nuevo}
                   disabled={!permitirAlta}
                   title={!permitirAlta ? mensajeAltaDeshabilitada : undefined}
                 />
               )}
               {buttonStock && puedeGestionar && (
-                <TextButton text="Transferir" onClick={() => setTransferenciaOpen(true)} />
+                <TextButton
+                  text="Transferir"
+                  onClick={() => setTransferenciaOpen(true)}
+                />
               )}
             </div>
 
