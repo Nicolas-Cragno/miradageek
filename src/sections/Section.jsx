@@ -22,6 +22,8 @@ export default function Section({
   detailRef = null,
   buttonStock = false,
   renderActions = null,
+  permitirAlta = true,
+  mensajeAltaDeshabilitada = "Alta temporalmente deshabilitada",
 }) {
   const { user } = useAuth();
   const puedeGestionar = puedeGestionarOperaciones(user);
@@ -44,6 +46,7 @@ export default function Section({
   }, []);
 
   function nuevo() {
+    if (!permitirAlta) return;
     setFormType("default");
     setEditingItem(null);
     setFormOpen(true);
@@ -108,7 +111,14 @@ export default function Section({
                     <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
                   </>
                 )}
-                {puedeGestionar && <TextButton text={"+ Nuevo"} onClick={nuevo} />}
+                {puedeGestionar && (
+                  <TextButton
+                    text={permitirAlta ? "+ Nuevo" : "+ Nuevo — Próximamente"}
+                    onClick={nuevo}
+                    disabled={!permitirAlta}
+                    title={!permitirAlta ? mensajeAltaDeshabilitada : undefined}
+                  />
+                )}
               </div>
             </div>
 
@@ -160,7 +170,14 @@ export default function Section({
           <div className="section-list">
             <div className="section-header ">
               <h1>{title}</h1>
-              {puedeGestionar && <TextButton text="+ Nuevo" onClick={nuevo} />}
+              {puedeGestionar && (
+                <TextButton
+                  text={permitirAlta ? "+ Nuevo" : "+ Nuevo — Próximamente"}
+                  onClick={nuevo}
+                  disabled={!permitirAlta}
+                  title={!permitirAlta ? mensajeAltaDeshabilitada : undefined}
+                />
+              )}
               {buttonStock && puedeGestionar && (
                 <TextButton text="Transferir" onClick={() => setTransferenciaOpen(true)} />
               )}

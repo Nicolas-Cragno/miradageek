@@ -7,12 +7,16 @@ const TextButton = ({
   type = "button",
   mini = false,
   onClick,
+  disabled = false,
+  title,
 }) => {
   return (
     <button
       className={mini ? "btn-body-mini" : doble ? "btn-body-doble" : "btn-body"}
       onClick={onClick}
       type={type}
+      disabled={disabled}
+      title={title}
     >
       {doble ? (
         <>

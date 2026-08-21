@@ -3,6 +3,7 @@ import { useData } from "../context/DataContext";
 import Section from "./Section";
 import UsuarioForm from "../components/formularios/UsuarioForm";
 import campos from "../data/campos/camposUsuarios.json";
+import { FEATURES } from "../config/features";
 
 const nombresRoles = {
   "01": "USUARIO",
@@ -38,6 +39,8 @@ export default function Usuarios() {
       title="Usuarios"
       collection="usuarios"
       FormComponent={UsuarioForm}
+      permitirAlta={FEATURES.CREAR_USUARIOS}
+      mensajeAltaDeshabilitada="Alta de usuarios temporalmente deshabilitada"
     />
   );
 }

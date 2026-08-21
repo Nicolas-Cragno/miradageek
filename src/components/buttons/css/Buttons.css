@@ -169,6 +169,15 @@
   
 }
 
+.btn-body:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-body:disabled:hover {
+  background-color: var(--color-title);
+}
+
 .btn-logo{
   padding: .1rem;
   max-width: 2rem;
