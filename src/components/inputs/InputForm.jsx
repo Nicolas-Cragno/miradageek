@@ -73,7 +73,13 @@ export default function InputForm({
       )}
 
       {(input === "text" || input === "number") && (
-        <input type={input} value={value ?? ""} onChange={handleChange} />
+        <input
+          type={input}
+          value={value ?? ""}
+          min={input === "number" ? campo.min : undefined}
+          max={input === "number" ? campo.max : undefined}
+          onChange={handleChange}
+        />
       )}
 
       {input === "list" && (

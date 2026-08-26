@@ -5,6 +5,8 @@ import { submit } from "../../functions/submits/submits";
 import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
 import { showError, showSuccess } from "../../utils/alerts";
+import { useAuth } from "../../auth/AuthContext";
+import { obtenerVentaDolarOficial } from "../../services/dolarService";
 
 export default function Form({
   open = false,
@@ -17,6 +19,7 @@ export default function Form({
   detailCollection = null,
   detailRef = null,
 }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [saving, setSaving] = useState(false);
@@ -96,14 +99,42 @@ export default function Form({
     e.preventDefault();
 
     setSaveError("");
+
+    const usuario = user?.id;
+    if (typeof usuario !== "string" || !/^US-[A-Z][0-9]{4}$/.test(usuario)) {
+      const message =
+        "No pudimos identificar tu usuario interno. Cerrá sesión y volvé a ingresar.";
+      setSaveError(message);
+      await showError("No se pudo guardar", message);
+      return;
+    }
+
     setSaving(true);
 
     try {
       let mainData = {};
+      let valorDolar = null;
 
       camposForm.forEach((c) => {
         mainData[c.key] = formData[c.key];
       });
+
+      if (!item && ["compras", "ventas"].includes(collection)) {
+        try {
+          valorDolar = await obtenerVentaDolarOficial();
+        } catch {
+          throw new Error(
+            "No se pudo obtener la cotización oficial del dólar. La operación no fue guardada.",
+          );
+        }
+        if (!Number.isFinite(valorDolar) || valorDolar <= 0) {
+          throw new Error(
+            "La cotización oficial del dólar no es válida. La operación no fue guardada.",
+          );
+        }
+        mainData.valorDivisa =
+          formData.moneda === "USD" ? Number(formData.valorDivisa) : 1;
+      }
 
       await submit({
         collection,
@@ -113,6 +144,9 @@ export default function Form({
         idElemento: item?.id ?? null,
         detailCollection,
         detailRef,
+        usuario,
+        valorDolar,
+        cotizacionCosto: valorDolar,
       });
 
       setSaving(false);

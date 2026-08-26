@@ -33,6 +33,7 @@
     "ficha": false,
     "form": true,
     "input": "number",
+    "min": 0,
     "use": "database",
     "dato": "number"
   },
@@ -63,6 +64,7 @@
     "ficha": false,
     "form": true,
     "input": "number",
+    "min": 0,
     "use": "database",
     "dato": "number"
   },

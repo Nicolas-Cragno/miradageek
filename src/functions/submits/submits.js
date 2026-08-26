@@ -9,7 +9,8 @@ export async function submit({
   idElemento = null,
   detailCollection = null,
   detailRef = null,
-  usuario = "",
+  usuario,
+  valorDolar = null,
   sucursalesDisponibles = [],
   permitirNegativo = false,
   cotizacionCosto = null,
@@ -20,7 +21,7 @@ export async function submit({
     .filter((c) => c.form)
     .forEach((c) => {
       if (c.use === "database") {
-        const valor = campoFirestore(formData[c.key], c.dato);
+        const valor = campoFirestore(formData[c.key], c);
         if (valor !== undefined) data[c.key] = valor;
       }
     });
@@ -35,6 +36,7 @@ export async function submit({
     detalleNuevo: campoDetalle ? formData[campoDetalle.key] ?? [] : [],
     detalleOriginal: campoDetalle ? originalData[campoDetalle.key] ?? [] : [],
     usuario,
+    valorDolar,
     sucursalesDisponibles,
     permitirNegativo,
     cotizacionCosto,
@@ -43,21 +45,29 @@ export async function submit({
   return idReturn;
 }
 
-function campoFirestore(valor, tipo = "string") {
+function campoFirestore(valor, campo = {}) {
   if (valor === undefined) return undefined;
-  if (valor === null || valor === "") {
-    return valor;
-  }
 
-  switch (tipo.toLowerCase()) {
+  switch ((campo.dato || "string").toLowerCase()) {
     case "string":
+      if (valor === null || valor === "") return valor;
       return String(valor);
 
     case "number": {
+      if (valor === null || valor === "") return null;
+
       const numero = Number(valor);
 
       if (!Number.isFinite(numero)) {
         throw new Error(`"${valor}" no es un número válido.`);
+      }
+
+      if (campo.min !== undefined && numero < campo.min) {
+        throw new Error(`"${campo.label || campo.key}" no puede ser menor que ${campo.min}.`);
+      }
+
+      if (campo.max !== undefined && numero > campo.max) {
+        throw new Error(`"${campo.label || campo.key}" no puede ser mayor que ${campo.max}.`);
       }
 
       return numero;

@@ -25,6 +25,58 @@ import {
   validarCanalSeleccionable,
 } from "./estadisticasVentas";
 
+const valoresIguales = (anterior, siguiente) => {
+  if (anterior === siguiente) return true;
+  if (anterior?.isEqual && siguiente?.isEqual) {
+    return anterior.isEqual(siguiente);
+  }
+  if (Array.isArray(anterior) && Array.isArray(siguiente)) {
+    return anterior.length === siguiente.length &&
+      anterior.every((valor, indice) => valoresIguales(valor, siguiente[indice]));
+  }
+  if (
+    anterior &&
+    siguiente &&
+    typeof anterior === "object" &&
+    typeof siguiente === "object"
+  ) {
+    const clavesAnterior = Object.keys(anterior);
+    const clavesSiguiente = Object.keys(siguiente);
+    return clavesAnterior.length === clavesSiguiente.length &&
+      clavesAnterior.every(
+        (clave) => clave in siguiente && valoresIguales(anterior[clave], siguiente[clave]),
+      );
+  }
+  return false;
+};
+
+const aplicarDiferenciaSinEscriturasRedundantes = ({
+  transaction,
+  acumulados,
+  huellaAnterior,
+  huellaNueva,
+}) => {
+  const documentosActuales = new Map(
+    [...acumulados.values()].map(({ referencia, datos }) => [referencia.path, datos]),
+  );
+  const transactionConCambiosReales = {
+    update(referencia, cambios) {
+      const documentoActual = documentosActuales.get(referencia.path);
+      const cambiaDocumento = !documentoActual || Object.entries(cambios).some(
+        ([campo, valor]) => !valoresIguales(documentoActual[campo], valor),
+      );
+      if (cambiaDocumento) transaction.update(referencia, cambios);
+    },
+  };
+
+  aplicarDiferenciaEstadistica({
+    transaction: transactionConCambiosReales,
+    acumulados,
+    huellaAnterior,
+    huellaNueva,
+  });
+};
+
 const configuracionIds = {
   compras: ["CP-", 8, 99999999],
   detalleCompras: ["DC-", 8, 99999999],
@@ -46,6 +98,14 @@ const limpiarDetalle = (detalle) =>
   Object.fromEntries(
     Object.entries(detalle).filter(([campo]) => !camposInternosDetalle.has(campo)),
   );
+
+const validarUsuarioInterno = (usuario) => {
+  if (typeof usuario !== "string" || !/^US-[A-Z][0-9]{4}$/.test(usuario)) {
+    throw new Error(
+      "No pudimos identificar tu usuario interno. Cerrá sesión y volvé a ingresar.",
+    );
+  }
+};
 
 const siguienteSerie = (serie) => {
   const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -223,6 +283,7 @@ export async function guardarMovimientoManual({
   sucursalesDisponibles = [],
   permitirNegativo = false,
 }) {
+  validarUsuarioInterno(usuario);
   const tipoMovimiento = normalizarTipoMovimiento(data.tipo);
   if (!data.sucursal) throw new Error("Seleccioná una sucursal.");
   if (!TIPOS_MOVIMIENTO_MANUAL.includes(tipoMovimiento)) {
@@ -322,6 +383,7 @@ export async function transferirStock({
   sucursalesDisponibles = [],
   permitirNegativo = false,
 }) {
+  validarUsuarioInterno(usuario);
   const unidades = numeroSeguro(cantidad, Number.NaN);
   if (!idProducto || !Number.isFinite(unidades) || unidades <= 0) {
     throw new Error("Seleccioná un producto y una cantidad mayor a cero.");
@@ -398,16 +460,24 @@ export async function guardarOperacionNucleo({
   detalleNuevo = [],
   detalleOriginal = [],
   usuario,
+  valorDolar = null,
   sucursalesDisponibles = [],
   permitirNegativo = false,
   cotizacionCosto = null,
 }) {
+  validarUsuarioInterno(usuario);
   validarDetalles(detalleNuevo);
   const esCompra = coleccion === "compras";
   const campoObligacion = esCompra ? "pendiente" : "reservado";
   const estadoSolicitado = data.estado || ESTADOS_OPERACION.PENDIENTE;
   const esAltaCompletada = !idElemento && estadoSolicitado === ESTADOS_OPERACION.COMPLETADA;
   const fechaCambio = Timestamp.now();
+
+  if (!idElemento && (!Number.isFinite(valorDolar) || valorDolar <= 0)) {
+    throw new Error(
+      "No se pudo obtener una cotización oficial válida. La operación no fue guardada.",
+    );
+  }
 
   return runTransaction(db, async (transaction) => {
     const contadorPrincipalRef = idElemento
@@ -595,6 +665,9 @@ export async function guardarOperacionNucleo({
 
     if (!idElemento) {
       datosOperacion.fecha = serverTimestamp();
+      datosOperacion.usuario = usuario;
+      datosOperacion.modificaciones = [];
+      datosOperacion.valorDolar = valorDolar;
       datosOperacion.ediciones = [];
       datosOperacion.detalleEstado = [
         {
@@ -629,6 +702,16 @@ export async function guardarOperacionNucleo({
       transaction.update(doc(db, coleccion, operacionId), {
         ...datosOperacion,
         ediciones: [...(operacionAnterior.ediciones || []), ...cambios],
+        ...(Array.isArray(operacionAnterior.modificaciones)
+          ? {
+              modificaciones: [
+                ...operacionAnterior.modificaciones,
+                ...(cambios.length
+                  ? [{ fecha: fechaCambio, usuario, cambios }]
+                  : []),
+              ],
+            }
+          : {}),
         detalleEstado,
       });
     }
@@ -710,31 +793,42 @@ export async function guardarOperacionNucleo({
 
       const detalleActual = siguientes[0];
       const detalleAnterior = anteriores[0];
+      const campoPrecio = esCompra ? "costo" : "precio";
+      const campoMoneda = esCompra ? "monedaCosto" : "monedaPrecio";
       const debeActualizarPrecio =
         !idElemento ||
         !detalleAnterior ||
         String(detalleAnterior.precio) !== String(detalleActual?.precio) ||
-        String(detalleAnterior.idProducto) !== String(detalleActual?.idProducto);
+        String(detalleAnterior.idProducto) !== String(detalleActual?.idProducto) ||
+        producto.datos[campoMoneda] !== datosOperacion.moneda;
       if (detalleActual && debeActualizarPrecio) {
-        const campoPrecio = esCompra ? "costo" : "precio";
-        const campoMoneda = esCompra ? "monedaCosto" : "monedaPrecio";
         const precioNuevo = numeroSeguro(detalleActual.precio);
         const precioAnterior = numeroSeguro(producto.datos[campoPrecio]);
         actualizacion[campoPrecio] = precioNuevo;
         actualizacion[campoMoneda] = datosOperacion.moneda;
-        if (
-          precioAnterior !== precioNuevo ||
-          producto.datos[campoMoneda] !== datosOperacion.moneda
-        ) {
+        const edicionesProducto = [];
+        if (precioAnterior !== precioNuevo) {
+          edicionesProducto.push({
+            fecha: fechaCambio,
+            usuario,
+            campo: campoPrecio,
+            valorAnterior: precioAnterior,
+            valorNuevo: precioNuevo,
+          });
+        }
+        if (producto.datos[campoMoneda] !== datosOperacion.moneda) {
+          edicionesProducto.push({
+            fecha: fechaCambio,
+            usuario,
+            campo: campoMoneda,
+            valorAnterior: producto.datos[campoMoneda] ?? null,
+            valorNuevo: datosOperacion.moneda,
+          });
+        }
+        if (edicionesProducto.length) {
           actualizacion.ediciones = [
             ...(producto.datos.ediciones || []),
-            {
-              fecha: fechaCambio,
-              usuario,
-              campo: campoPrecio,
-              valorAnterior: precioAnterior,
-              valorNuevo: precioNuevo,
-            },
+            ...edicionesProducto,
           ];
         }
       }
@@ -804,7 +898,7 @@ export async function guardarOperacionNucleo({
     }
 
     if (!esCompra && huellaNueva) {
-      aplicarDiferenciaEstadistica({
+      aplicarDiferenciaSinEscriturasRedundantes({
         transaction,
         acumulados: acumuladosVenta,
         huellaAnterior,
@@ -844,6 +938,7 @@ export async function registrarCumplimiento({
   sucursalesDisponibles,
   permitirNegativo = false,
 }) {
+  validarUsuarioInterno(usuario);
   const esCompra = coleccion === "compras";
   const detalleColeccion = esCompra ? "detalleCompras" : "detalleVentas";
   const campoObligacion = esCompra ? "pendiente" : "reservado";
@@ -1025,7 +1120,7 @@ export async function registrarCumplimiento({
       asignacionDetalles: contadores.asignacionDetalles,
     });
     if (huellaNueva) {
-      aplicarDiferenciaEstadistica({
+      aplicarDiferenciaSinEscriturasRedundantes({
         transaction,
         acumulados: acumuladosVenta,
         huellaAnterior,
@@ -1044,6 +1139,7 @@ export async function anularOperacion({
   sucursalesDisponibles,
   permitirNegativo = false,
 }) {
+  validarUsuarioInterno(usuario);
   if (!motivo?.trim()) throw new Error("El motivo de anulación es obligatorio.");
   const esCompra = coleccion === "compras";
   const detalleColeccion = esCompra ? "detalleCompras" : "detalleVentas";
@@ -1179,7 +1275,7 @@ export async function anularOperacion({
       });
     }
     if (huellaAnterior && reingresarVenta) {
-      aplicarDiferenciaEstadistica({
+      aplicarDiferenciaSinEscriturasRedundantes({
         transaction,
         acumulados: acumuladosVenta,
         huellaAnterior,
