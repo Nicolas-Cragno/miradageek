@@ -6,7 +6,10 @@ import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
 import { showError, showSuccess } from "../../utils/alerts";
 import { useAuth } from "../../auth/AuthContext";
-import { obtenerVentaDolarOficial } from "../../services/dolarService";
+import {
+  obtenerValorDivisa,
+  obtenerVentaDolarOficial,
+} from "../../services/dolarService";
 
 export default function Form({
   open = false,
@@ -88,7 +91,44 @@ export default function Form({
   if (!open) return null;
   const camposForm = campos.filter((c) => c.form);
 
-  function handleChange(key, value) {
+  async function handleChange(key, value) {
+    if (key === "moneda" && ["compras", "ventas"].includes(collection)) {
+      setSaveError("");
+
+      if (value === "ARS") {
+        setFormData((prev) => ({
+          ...prev,
+          moneda: value,
+          valorDivisa: 1,
+        }));
+        return;
+      }
+
+      if (value === "USD") {
+        setFormData((prev) => ({
+          ...prev,
+          moneda: value,
+          valorDivisa: "",
+        }));
+
+        try {
+          const cotizacion = await obtenerValorDivisa(value);
+          if (!Number.isFinite(cotizacion) || cotizacion <= 1) {
+            throw new Error("La cotización obtenida no es válida.");
+          }
+          setFormData((prev) => prev.moneda === value
+            ? { ...prev, valorDivisa: cotizacion }
+            : prev);
+        } catch {
+          const message =
+            "No se pudo obtener la cotización del dólar. Ingresala manualmente antes de guardar.";
+          setSaveError(message);
+          await showError("No se pudo obtener la cotización", message);
+        }
+        return;
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
       [key]: value,
@@ -119,6 +159,20 @@ export default function Form({
         mainData[c.key] = formData[c.key];
       });
 
+      if (["compras", "ventas"].includes(collection)) {
+        if (formData.moneda === "ARS") {
+          mainData.valorDivisa = 1;
+        } else if (formData.moneda === "USD") {
+          const valorDivisa = Number(formData.valorDivisa);
+          if (!Number.isFinite(valorDivisa) || valorDivisa <= 1) {
+            throw new Error(
+              "Ingresá una cotización válida para guardar una operación en dólares.",
+            );
+          }
+          mainData.valorDivisa = valorDivisa;
+        }
+      }
+
       if (!item && ["compras", "ventas"].includes(collection)) {
         try {
           valorDolar = await obtenerVentaDolarOficial();
@@ -132,8 +186,6 @@ export default function Form({
             "La cotización oficial del dólar no es válida. La operación no fue guardada.",
           );
         }
-        mainData.valorDivisa =
-          formData.moneda === "USD" ? Number(formData.valorDivisa) : 1;
       }
 
       await submit({
