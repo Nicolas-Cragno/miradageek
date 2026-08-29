@@ -25,6 +25,12 @@ export const puedeAdministrarUsuarios = (usuario) =>
 export const puedeVerInformes = (usuario) =>
   [ROLES.ADMINISTRADOR, ROLES.DESARROLLADOR].includes(usuario?.tipo);
 
+export const puedeCargarCanalesVentas = (usuario) =>
+  puedeGestionarOperaciones(usuario);
+
+export const puedeCargarEstadisticasVentas = (usuario) =>
+  puedeVerInformes(usuario);
+
 export const esDesarrollador = (usuario) =>
   usuario?.tipo === ROLES.DESARROLLADOR;
 

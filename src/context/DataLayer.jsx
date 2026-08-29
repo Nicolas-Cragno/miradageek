@@ -7,7 +7,11 @@ import { DetalleVentasProvider } from "./DetalleVentasContext";
 import { useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { useAuth } from "../auth/AuthContext";
-import { esUsuarioExterno } from "../auth/permisos";
+import {
+  esUsuarioExterno,
+  puedeCargarCanalesVentas,
+  puedeCargarEstadisticasVentas,
+} from "../auth/permisos";
 
 const collectionsByRoute = {
   "/": [],
@@ -31,13 +35,28 @@ const collectionsByRoute = {
     "tipos",
     {
       nombre: "canalesVentas",
+      clave: "canalesVentas",
       filtros: [
         { campo: "estado", valor: true },
         { campo: "__name__", operador: "!=", valor: "CV-A0000" },
       ],
     },
   ],
-  "/estadisticas": ["canalesVentas"],
+  "/estadisticas": [
+    {
+      nombre: "canalesVentas",
+      clave: "canalesVentas",
+      filtros: [
+        { campo: "estado", valor: true },
+        { campo: "__name__", operador: "!=", valor: "CV-A0000" },
+      ],
+    },
+    {
+      nombre: "canalesVentas",
+      clave: "estadisticasVentas",
+      documento: "CV-A0000",
+    },
+  ],
   "/usuarios": [
     "usuarios",
     "accesosUsuarios",
@@ -51,7 +70,19 @@ const DataLayer = ({ children }) => {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const collections = useMemo(() => {
-    if (!esUsuarioExterno(user)) return collectionsByRoute[pathname] ?? [];
+    if (!esUsuarioExterno(user)) {
+      const collectionsForRoute = collectionsByRoute[pathname] ?? [];
+      return collectionsForRoute.filter((configuracion) => {
+        if (typeof configuracion === "string") return true;
+        if (configuracion.clave === "estadisticasVentas") {
+          return puedeCargarEstadisticasVentas(user);
+        }
+        if (configuracion.clave === "canalesVentas") {
+          return puedeCargarCanalesVentas(user);
+        }
+        return true;
+      });
+    }
 
     if (pathname === "/productos") return ["productos", "tipos"];
     if (pathname === "/compras" && user.entidadTipo === "proveedor") {

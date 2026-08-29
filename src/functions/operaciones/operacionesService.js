@@ -595,7 +595,11 @@ export async function guardarOperacionNucleo({
           if (!Number.isFinite(costo) || costo < 0) {
             throw new Error("El producto no tiene un costo válido para guardar su valor histórico.");
           }
-          if (!Number.isFinite(valorDivisaCosto) || valorDivisaCosto <= 0) {
+          if (
+            !Number.isFinite(valorDivisaCosto) ||
+            valorDivisaCosto <= 0 ||
+            (monedaCosto === "USD" && valorDivisaCosto === 1)
+          ) {
             throw new Error(
               "No se pudo obtener una cotización válida para conservar el costo histórico en pesos.",
             );
@@ -622,10 +626,37 @@ export async function guardarOperacionNucleo({
 
     const estado = estadoSegunDetalles(nuevosNormalizados);
     const { parcial, monto } = calcularMontos(nuevosNormalizados, data.descuento);
-    const moneda = data.moneda || "ARS";
-    const valorDivisa = moneda === "ARS" ? 1 : numeroSeguro(data.valorDivisa);
-    if (moneda === "USD" && valorDivisa <= 0) {
-      throw new Error("Ingresá una cotización del dólar mayor a cero.");
+    const moneda = normalizarMoneda(data.moneda);
+    const valorDivisa = moneda === "ARS"
+      ? 1
+      : numeroSeguro(data.valorDivisa, Number.NaN);
+    if (
+      moneda === "USD" &&
+      (!Number.isFinite(valorDivisa) || valorDivisa <= 0 || valorDivisa === 1)
+    ) {
+      throw new Error("Ingresá una cotización USD válida y distinta de 1.");
+    }
+    const ventaConEstadisticas = numeroSeguro(operacionAnterior.estadisticas?.ventas) > 0;
+    const ventaConCumplimientos = originalesNormalizados.some(
+      (detalle) =>
+        numeroSeguro(detalle.cantidadCumplida) > 0 ||
+        (detalle.cumplimientos || []).length > 0,
+    );
+    if (
+      !esCompra &&
+      idElemento &&
+      (ventaConEstadisticas || ventaConCumplimientos) &&
+      (
+        normalizarMoneda(operacionAnterior.moneda) !== moneda ||
+        numeroSeguro(
+          operacionAnterior.valorDivisa,
+          normalizarMoneda(operacionAnterior.moneda) === "ARS" ? 1 : Number.NaN,
+        ) !== valorDivisa
+      )
+    ) {
+      throw new Error(
+        "La moneda y su cotización no pueden modificarse después del primer cumplimiento.",
+      );
     }
     const datosOperacion = {
       ...data,
@@ -701,6 +732,10 @@ export async function guardarOperacionNucleo({
       }
       transaction.update(doc(db, coleccion, operacionId), {
         ...datosOperacion,
+        modificaciones: [
+          ...(operacionAnterior.modificaciones || []),
+          { fecha: fechaCambio, usuario },
+        ],
         ediciones: [...(operacionAnterior.ediciones || []), ...cambios],
         ...(Array.isArray(operacionAnterior.modificaciones)
           ? {

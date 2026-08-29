@@ -4,18 +4,25 @@
 }
 
 .layout-content {
-    flex: 1;
+    flex: 0 1 auto;
+    width: calc(100% - 220px);
+    max-width: calc(100% - 220px);
+    min-width: 0;
     margin-left: 220px;
     transition: margin-left .35s cubic-bezier(.4,0,.2,1);
 }
 
 .layout-content.closed {
-    margin-left: 100px;
+    width: calc(100% - 110px);
+    max-width: calc(100% - 110px);
+    margin-left: 110px;
 }
 
 @media (max-width:768px) {
     .layout-content,
     .layout-content.closed {
+        width: 100%;
+        max-width: 100%;
         margin-left: 0;
         margin-bottom: 65px;
     }

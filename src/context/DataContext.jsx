@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   collection,
+  doc,
   documentId,
   onSnapshot,
   query,
@@ -15,27 +16,29 @@ export function DataProvider({ children, collections: requestedCollections = [] 
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [errores, setErrores] = useState({});
   const errorShown = useRef(false);
 
   useEffect(() => {
+    const claveDatos = (configuracion) =>
+      typeof configuracion === "string"
+        ? configuracion
+        : configuracion.clave || configuracion.nombre;
     const collections = requestedCollections.filter(
       (item, index, items) =>
-        items.findIndex((candidate) =>
-          typeof item === "string"
-            ? candidate === item
-            : candidate.nombre === item.nombre,
-        ) === index,
+        items.findIndex((candidate) => claveDatos(candidate) === claveDatos(item)) === index,
     );
     setData({});
     setError("");
+    setErrores({});
     errorShown.current = false;
     setLoading(collections.length > 0);
 
     if (collections.length === 0) return undefined;
 
     const cargadas = new Set();
-    const marcarComoCargada = (nombreColeccion) => {
-      cargadas.add(nombreColeccion);
+    const marcarComoCargada = (clave) => {
+      cargadas.add(clave);
 
       if (cargadas.size === collections.length) {
         setLoading(false);
@@ -45,11 +48,16 @@ export function DataProvider({ children, collections: requestedCollections = [] 
     const unsubs = collections.map((configuracion) => {
       const nombreColeccion =
         typeof configuracion === "string" ? configuracion : configuracion.nombre;
-      const referencia = collection(db, nombreColeccion);
+      const clave = claveDatos(configuracion);
+      const esDocumento =
+        typeof configuracion !== "string" && Boolean(configuracion.documento);
+      const referencia = esDocumento
+        ? doc(db, nombreColeccion, configuracion.documento)
+        : collection(db, nombreColeccion);
       const filtros = typeof configuracion === "string"
         ? []
         : configuracion.filtros || (configuracion.filtro ? [configuracion.filtro] : []);
-      const consulta = filtros.length
+      const consulta = !esDocumento && filtros.length
         ? query(
             referencia,
             ...filtros.map((filtro) =>
@@ -68,21 +76,26 @@ export function DataProvider({ children, collections: requestedCollections = [] 
         (snapshot) => {
           setData((prev) => ({
             ...prev,
-            [nombreColeccion]: snapshot.docs.map((documento) => ({
-              ...documento.data(),
-              id: documento.id,
-            })),
+            [clave]: esDocumento
+              ? snapshot.exists()
+                ? { ...snapshot.data(), id: snapshot.id }
+                : null
+              : snapshot.docs.map((documento) => ({
+                  ...documento.data(),
+                  id: documento.id,
+                })),
           }));
-          marcarComoCargada(nombreColeccion);
+          marcarComoCargada(clave);
         },
         (snapshotError) => {
           console.error(
-            `[Datos] Error cargando ${nombreColeccion}:`,
+            `[Datos] Error cargando ${clave}:`,
             snapshotError,
           );
           setError(
             "No se pudieron cargar todos los datos. Revisá tu conexión o permisos.",
           );
+          setErrores((prev) => ({ ...prev, [clave]: snapshotError.code || "unknown" }));
           if (!errorShown.current) {
             errorShown.current = true;
             void showError(
@@ -90,7 +103,7 @@ export function DataProvider({ children, collections: requestedCollections = [] 
               "Revisá tu conexión o volvé a iniciar sesión. Si continúa, contactá al administrador.",
             );
           }
-          marcarComoCargada(nombreColeccion);
+          marcarComoCargada(clave);
         },
       )
       );
@@ -105,6 +118,7 @@ export function DataProvider({ children, collections: requestedCollections = [] 
         ...data,
         loading,
         error,
+        errores,
       }}
     >
       {children}

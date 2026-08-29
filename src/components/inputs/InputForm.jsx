@@ -13,6 +13,7 @@ export default function InputForm({
   valorDivisa,
   tipoMovimiento,
   sucursalMovimiento,
+  readOnly = false,
 }) {
   const { key, label, input = "text", options } = campo;
   const data = useData();
@@ -55,7 +56,7 @@ export default function InputForm({
       )}
 
       {input === "staticSelect" && (
-        <select value={value ?? ""} onChange={handleChange}>
+        <select value={value ?? ""} onChange={handleChange} disabled={readOnly}>
           {(campo.values || []).map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -79,6 +80,7 @@ export default function InputForm({
           min={input === "number" ? campo.min : undefined}
           max={input === "number" ? campo.max : undefined}
           onChange={handleChange}
+          readOnly={readOnly}
         />
       )}
 

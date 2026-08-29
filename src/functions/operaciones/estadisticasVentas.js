@@ -23,8 +23,12 @@ const mesEnArgentina = (fecha) => {
 
 const timestampMillis = (fecha) => fecha?.toMillis?.() ?? 0;
 
-export const normalizarMoneda = (moneda) =>
-  ["USD", "dolares", "dólares"].includes(String(moneda)) ? "USD" : "ARS";
+export const normalizarMoneda = (moneda) => {
+  const valor = String(moneda ?? "ARS").trim().toUpperCase();
+  if (["ARS", "PESO", "PESOS"].includes(valor)) return "ARS";
+  if (["USD", "DOLARES", "DÓLARES"].includes(valor)) return "USD";
+  throw new Error(`Moneda no soportada: ${moneda}.`);
+};
 
 export const crearHuellaVacia = (canal) => ({
   version: VERSION_ESTADISTICAS,
@@ -40,9 +44,16 @@ export const calcularHuellaVenta = ({ venta, detalles }) => {
   const huella = crearHuellaVacia(venta.canal);
   const descuento = numeroSeguro(venta.descuento);
   const factorDescuento = 1 - descuento / 100;
-  const valorDivisaVenta = normalizarMoneda(venta.moneda) === "USD"
+  const monedaVenta = normalizarMoneda(venta.moneda);
+  const valorDivisaVenta = monedaVenta === "USD"
     ? numeroSeguro(venta.valorDivisa)
     : 1;
+  if (
+    monedaVenta === "USD" &&
+    (!Number.isFinite(valorDivisaVenta) || valorDivisaVenta <= 0 || valorDivisaVenta === 1)
+  ) {
+    return { ...huella, contabilizable: false };
+  }
   let primeraFecha = null;
   let ultimaFecha = null;
 

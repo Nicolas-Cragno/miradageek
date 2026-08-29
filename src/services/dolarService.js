@@ -41,6 +41,12 @@ export async function obtenerVentaDolarOficial() {
 
 export async function obtenerValorDivisa(moneda) {
   if (moneda === "ARS") return 1;
-  if (moneda === "USD") return obtenerVentaDolarOficial();
+  if (moneda === "USD") {
+    const cotizacion = await obtenerVentaDolarOficial();
+    if (!Number.isFinite(cotizacion) || cotizacion <= 0 || cotizacion === 1) {
+      throw new Error("No se obtuvo una cotización USD válida.");
+    }
+    return cotizacion;
+  }
   throw new Error(`No existe una cotización configurada para ${moneda}.`);
 }

@@ -17,9 +17,10 @@ export default function ListForm({
   const [producto, setProducto] = useState("");
   const [cantidad, setCantidad] = useState(1);
   const [precio, setPrecio] = useState("");
+  const [monedaError, setMonedaError] = useState("");
 
   const agregarItem = () => {
-    if (!producto) return;
+    if (!producto || monedaError) return;
 
     const prod = productos.find((p) => String(p.id) === String(producto));
     if (!prod) return;
@@ -112,6 +113,7 @@ export default function ListForm({
           getLabel={productLabel}
           onChange={(id) => {
             setProducto(id);
+            setMonedaError("");
 
             const prod = productos.find((p) => String(p.id) === String(id));
 
@@ -123,9 +125,19 @@ export default function ListForm({
                 tipoOperacion === "compra"
                   ? prod.monedaCosto || "ARS"
                   : prod.monedaPrecio || "ARS";
-              const origen = ["USD", "dolares"].includes(monedaProducto)
-                ? "USD"
-                : "ARS";
+              const monedaNormalizada = String(monedaProducto).trim().toUpperCase();
+              let origen;
+              if (["ARS", "PESO", "PESOS"].includes(monedaNormalizada)) {
+                origen = "ARS";
+              } else if (["USD", "DOLARES", "DÓLARES"].includes(monedaNormalizada)) {
+                origen = "USD";
+              } else {
+                setPrecio("");
+                setMonedaError(
+                  `El producto tiene una moneda de precio no soportada: ${monedaProducto}.`,
+                );
+                return;
+              }
               const destino = monedaOperacion || "ARS";
               const cotizacion = Number(valorDivisa);
               let convertido = Number.isFinite(precioNumerico) ? precioNumerico : 0;
@@ -161,6 +173,8 @@ export default function ListForm({
           Agregar
         </button>
       </div>
+
+      {monedaError && <p className="form-error">{monedaError}</p>}
 
       <table className="listform-table">
         <thead>

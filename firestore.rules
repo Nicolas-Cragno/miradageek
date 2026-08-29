@@ -189,7 +189,9 @@ service cloud.firestore {
     }
 
     function validProduct() {
-      return request.resource.data.keys().hasAll(['descripcion']) &&
+      return request.resource.data.keys().hasAll([
+          'descripcion', 'monedaCosto', 'monedaPrecio'
+        ]) &&
         request.resource.data.keys().hasOnly([
           'id', 'descripcion', 'marca', 'tipo', 'costo', 'precio', 'stock',
           'monedaCosto', 'monedaPrecio', 'imagen', 'fecha', 'pendiente',
@@ -198,6 +200,10 @@ service cloud.firestore {
         validText('id', 80) && validText('descripcion', 500) && validText('marca', 160) &&
         validText('tipo', 40) && validText('monedaCosto', 20) &&
         validText('monedaPrecio', 20) && validText('imagen', 2000) &&
+        (!('monedaCosto' in request.resource.data) ||
+          request.resource.data.monedaCosto in ['ARS', 'USD']) &&
+        (!('monedaPrecio' in request.resource.data) ||
+          request.resource.data.monedaPrecio in ['ARS', 'USD']) &&
         validOptionalNumber('stock', -999999999, 999999999) &&
         validOptionalNumber('pendiente', 0, 999999999) &&
         validOptionalNumber('reservado', 0, 999999999) &&
@@ -213,7 +219,7 @@ service cloud.firestore {
     function validOperation(referenceField) {
       let data = request.resource.data;
       let estadisticas = data.get('estadisticas', {});
-      return data.keys().hasAll(['sucursal', 'monto']) &&
+      return data.keys().hasAll(['sucursal', 'monto', 'moneda', 'valorDivisa']) &&
         referenceField in data &&
         data.keys().hasOnly([
           'id', 'sucursal', referenceField, 'monto', 'detalle', 'datalle',
@@ -228,6 +234,8 @@ service cloud.firestore {
           'PENDIENTE', 'PARCIAL', 'COMPLETADA', 'ANULADA'
         ] &&
         data.get('moneda', 'ARS') in ['ARS', 'USD'] &&
+        ((data.moneda == 'ARS' && data.valorDivisa == 1) ||
+         (data.moneda == 'USD' && data.valorDivisa > 1)) &&
         validOptionalNumber('monto', 0, 999999999999) &&
         validOptionalNumber('parcial', 0, 999999999999) &&
         validOptionalNumber('descuento', 0, 100) &&
@@ -410,6 +418,13 @@ service cloud.firestore {
         request.resource.data.monedaCosto in ['ARS', 'USD'] &&
         request.resource.data.valorDivisaCosto is number &&
         request.resource.data.costoEnPesos is number &&
+        ((request.resource.data.monedaCosto == 'ARS' &&
+          request.resource.data.valorDivisaCosto == 1 &&
+          request.resource.data.costoEnPesos == request.resource.data.costo) ||
+         (request.resource.data.monedaCosto == 'USD' &&
+          request.resource.data.valorDivisaCosto > 0 &&
+          request.resource.data.valorDivisaCosto != 1 &&
+          request.resource.data.costoEnPesos > 0)) &&
         request.resource.data.cumplimientos is list;
     }
 
@@ -516,6 +531,9 @@ service cloud.firestore {
           request.resource.data.estadisticas.contabilizable == true)) &&
         (validCanalVentaSeleccionado() ||
          (!('canal' in resource.data) && !('canal' in request.resource.data))) &&
+        (!(resource.data.get('estadisticas', {}).get('ventas', 0) > 0) ||
+         (request.resource.data.moneda == resource.data.get('moneda', 'ARS') &&
+          request.resource.data.valorDivisa == resource.data.get('valorDivisa', 1))) &&
         (!('id' in resource.data) || request.resource.data.id == resource.data.id);
       allow delete: if false;
     }
@@ -569,6 +587,13 @@ service cloud.firestore {
             'costo', 'monedaCosto', 'valorDivisaCosto',
             'costoEnPesos', 'cumplimientos'
           ]))) &&
+        (!resource.data.keys().hasAny([
+           'costo', 'monedaCosto', 'valorDivisaCosto', 'costoEnPesos'
+         ]) ||
+         (request.resource.data.costo == resource.data.costo &&
+          request.resource.data.monedaCosto == resource.data.monedaCosto &&
+          request.resource.data.valorDivisaCosto == resource.data.valorDivisaCosto &&
+          request.resource.data.costoEnPesos == resource.data.costoEnPesos)) &&
         request.resource.data.venta == resource.data.venta;
       allow delete: if false;
     }

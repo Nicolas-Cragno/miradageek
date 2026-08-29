@@ -6,10 +6,16 @@ import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
 import { showError, showSuccess } from "../../utils/alerts";
 import { useAuth } from "../../auth/AuthContext";
+import { useData } from "../../context/DataContext";
 import {
   obtenerValorDivisa,
   obtenerVentaDolarOficial,
 } from "../../services/dolarService";
+
+const cotizacionUsdValida = (valor) => {
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero > 1;
+};
 
 export default function Form({
   open = false,
@@ -22,12 +28,14 @@ export default function Form({
   detailCollection = null,
   detailRef = null,
 }) {
+  const data = useData();
   const { user } = useAuth();
   const [formData, setFormData] = useState({});
   const [originalData, setOriginalData] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [cotizacionError, setCotizacionError] = useState("");
 
   useEffect(() => {
     const media = window.matchMedia(
@@ -70,7 +78,12 @@ export default function Form({
     if (!open) return;
 
     if (item) {
-      setFormData(item);
+      const defaults = Object.fromEntries(
+        campos
+          .filter((campo) => campo.form && campo.default !== undefined)
+          .map((campo) => [campo.key, campo.default]),
+      );
+      setFormData({ ...defaults, ...item });
       setOriginalData(item); // estado inicial del elemento
     } else {
       const init = {};
@@ -90,12 +103,28 @@ export default function Form({
 
   if (!open) return null;
   const camposForm = campos.filter((c) => c.form);
+  const campoDetalleForm = campos.find((campo) => campo.use === "detailDatabase");
+  const detallesOriginales = campoDetalleForm
+    ? originalData[campoDetalleForm.key] || []
+    : [];
+  const cotizacionHistoricaBloqueada =
+    collection === "ventas" &&
+    Boolean(item) &&
+    (
+      Number(originalData.estadisticas?.ventas || 0) > 0 ||
+      detallesOriginales.some(
+        (detalle) =>
+          Number(detalle.cantidadCumplida || 0) > 0 ||
+          (detalle.cumplimientos || []).length > 0,
+      )
+    );
 
-  async function handleChange(key, value) {
+  function handleChange(key, value) {
     if (key === "moneda" && ["compras", "ventas"].includes(collection)) {
       setSaveError("");
 
       if (value === "ARS") {
+        setCotizacionError("");
         setFormData((prev) => ({
           ...prev,
           moneda: value,
@@ -105,30 +134,34 @@ export default function Form({
       }
 
       if (value === "USD") {
+        setCotizacionError("");
         setFormData((prev) => ({
           ...prev,
           moneda: value,
           valorDivisa: "",
         }));
-
-        try {
-          const cotizacion = await obtenerValorDivisa(value);
-          if (!Number.isFinite(cotizacion) || cotizacion <= 1) {
-            throw new Error("La cotización obtenida no es válida.");
-          }
-          setFormData((prev) => prev.moneda === value
-            ? { ...prev, valorDivisa: cotizacion }
-            : prev);
-        } catch {
-          const message =
-            "No se pudo obtener la cotización del dólar. Ingresala manualmente antes de guardar.";
-          setSaveError(message);
-          await showError("No se pudo obtener la cotización", message);
-        }
+        obtenerValorDivisa("USD")
+          .then((cotizacion) => {
+            if (!cotizacionUsdValida(cotizacion)) {
+              throw new Error("La cotización obtenida no es válida.");
+            }
+            setFormData((prev) =>
+              prev.moneda === "USD" && !cotizacionUsdValida(prev.valorDivisa)
+                ? { ...prev, valorDivisa: cotizacion }
+                : prev,
+            );
+          })
+          .catch(() => {
+            setCotizacionError(
+              "No se pudo obtener la cotización oficial. Ingresala manualmente para continuar.",
+            );
+          });
         return;
       }
     }
-
+    if (key === "valorDivisa" && cotizacionUsdValida(value)) {
+      setCotizacionError("");
+    }
     setFormData((prev) => ({
       ...prev,
       [key]: value,
@@ -152,6 +185,15 @@ export default function Form({
     setSaving(true);
 
     try {
+      if (["compras", "ventas"].includes(collection)) {
+        if (formData.moneda === "ARS" && Number(formData.valorDivisa) !== 1) {
+          throw new Error("Las operaciones en ARS deben usar valor de divisa 1.");
+        }
+        if (formData.moneda === "USD" && !cotizacionUsdValida(formData.valorDivisa)) {
+          throw new Error("Ingresá una cotización USD válida y distinta de 1.");
+        }
+      }
+
       let mainData = {};
       let valorDolar = null;
 
@@ -188,6 +230,31 @@ export default function Form({
         }
       }
 
+      const campoDetalle = campos.find((campo) => campo.use === "detailDatabase");
+      const detalles = campoDetalle ? formData[campoDetalle.key] ?? [] : [];
+      const idsExistentes = new Set(
+        (campoDetalle ? originalData[campoDetalle.key] ?? [] : [])
+          .filter((detalle) => detalle.id)
+          .map((detalle) => detalle.id),
+      );
+      const requiereCotizacionCosto = collection === "ventas" && detalles.some((detalle) => {
+        if (detalle.id && idsExistentes.has(detalle.id)) return false;
+        const producto = (data.productos || []).find(
+          (actual) => String(actual.id) === String(detalle.idProducto),
+        );
+        return String(producto?.monedaCosto || "ARS").toUpperCase() === "USD";
+      });
+      let cotizacionCosto = null;
+      if (requiereCotizacionCosto) {
+        try {
+          cotizacionCosto = await obtenerValorDivisa("USD");
+        } catch {
+          throw new Error(
+            "No se pudo obtener una cotización válida para congelar el costo USD de los productos.",
+          );
+        }
+      }
+
       await submit({
         collection,
         formData: mainData,
@@ -198,7 +265,7 @@ export default function Form({
         detailRef,
         usuario,
         valorDolar,
-        cotizacionCosto: valorDolar,
+        cotizacionCosto,
       });
 
       setSaving(false);
@@ -238,9 +305,9 @@ export default function Form({
         </div>
 
         <form onSubmit={handleSubmit}>
-          {saveError && (
+          {(saveError || cotizacionError) && (
             <p className="form-error" role="alert">
-              {saveError}
+              {saveError || cotizacionError}
             </p>
           )}
           <div className="form-grid">
@@ -258,6 +325,12 @@ export default function Form({
                   value={formData[campo.key]}
                   onChange={handleChange}
                   detailRef={detailRef}
+                  monedaOperacion={formData.moneda}
+                  valorDivisa={formData.valorDivisa}
+                  readOnly={
+                    cotizacionHistoricaBloqueada &&
+                    ["moneda", "valorDivisa"].includes(campo.key)
+                  }
                 />
               </div>
             ))}
