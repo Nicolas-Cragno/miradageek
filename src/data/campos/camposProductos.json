@@ -14,6 +14,7 @@
     "ficha": true,
     "form": true,
     "input": "text",
+    "required": true,
     "use": "database",
     "dato": "string"
   },
@@ -96,6 +97,7 @@
     "form": true,
     "input": "select",
     "options": "tipos",
+    "required": true,
     "use": "database",
     "dato": "string"
   },

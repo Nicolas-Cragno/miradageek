@@ -659,7 +659,8 @@ service cloud.firestore {
         (esRol('02') && documentId == 'CV-A0000') ||
         (esRol('02') && documentId != 'CV-A0000' && resource.data.estado == true);
       allow list: if puedeVerEstadisticas() ||
-        (esRol('02') && documentId != 'CV-A0000' && resource.data.estado == true);
+        (esRol('02') && resource.data.id != 'CV-A0000' &&
+         resource.data.estado == true);
       allow create, delete: if false;
       allow update: if puedeGestionarOperaciones() && validCanalVenta(documentId) &&
         request.resource.data.id == resource.data.id &&

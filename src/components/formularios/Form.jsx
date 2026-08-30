@@ -11,10 +11,20 @@ import {
   obtenerValorDivisa,
   obtenerVentaDolarOficial,
 } from "../../services/dolarService";
+import {
+  CANAL_GENERAL_ID,
+  CANAL_OTROS_ID,
+} from "../../functions/operaciones/estadisticasVentas";
 
 const cotizacionUsdValida = (valor) => {
   const numero = Number(valor);
   return Number.isFinite(numero) && numero > 1;
+};
+
+const valorRequeridoPresente = (valor) => {
+  if (Array.isArray(valor)) return valor.length > 0;
+  if (typeof valor === "string") return valor.trim() !== "";
+  return valor !== null && valor !== undefined && valor !== "";
 };
 
 export default function Form({
@@ -185,6 +195,16 @@ export default function Form({
     setSaving(true);
 
     try {
+      const campoRequeridoFaltante = camposForm.find((campo) => {
+        if (!campo.required) return false;
+        const historicoSinCampo = Boolean(item) &&
+          !valorRequeridoPresente(originalData[campo.key]);
+        return !historicoSinCampo && !valorRequeridoPresente(formData[campo.key]);
+      });
+      if (campoRequeridoFaltante) {
+        throw new Error(`Completá el campo obligatorio: ${campoRequeridoFaltante.label}.`);
+      }
+
       if (["compras", "ventas"].includes(collection)) {
         if (formData.moneda === "ARS" && Number(formData.valorDivisa) !== 1) {
           throw new Error("Las operaciones en ARS deben usar valor de divisa 1.");
@@ -200,6 +220,29 @@ export default function Form({
       camposForm.forEach((c) => {
         mainData[c.key] = formData[c.key];
       });
+
+      if (!item && collection === "ventas") {
+        if (data.errores?.canalesVentas) {
+          throw new Error(
+            "No se pudieron cargar los canales de venta. Revisá tus permisos antes de guardar.",
+          );
+        }
+        const canalesDisponibles = (data.canalesVentas || []).filter(
+          (canal) => canal.id !== CANAL_GENERAL_ID && canal.estado === true,
+        );
+        const canalSeleccionado = canalesDisponibles.find(
+          (canal) => String(canal.id) === String(formData.canal),
+        );
+        const canalOtros = canalesDisponibles.find(
+          (canal) => canal.id === CANAL_OTROS_ID,
+        );
+        if (!canalSeleccionado && !canalOtros) {
+          throw new Error(
+            "No está disponible el canal de venta “Otros”. Seleccioná un canal válido o contactá al administrador.",
+          );
+        }
+        mainData.canal = canalSeleccionado?.id || canalOtros.id;
+      }
 
       if (["compras", "ventas"].includes(collection)) {
         if (formData.moneda === "ARS") {

@@ -34,14 +34,21 @@ export default function InputForm({
 
   return (
     <div className="form-group">
-      <label>{label}</label>
+      <label>
+        {label}
+        {campo.required ? " *" : ""}
+      </label>
 
       {input === "disabled" && (
         <span className="form-disabled">{value ?? "-"}</span>
       )}
 
       {input === "textarea" && (
-        <textarea value={value ?? ""} onChange={handleChange} />
+        <textarea
+          value={value ?? ""}
+          onChange={handleChange}
+          required={campo.required}
+        />
       )}
 
       {input === "select" && (
@@ -52,11 +59,17 @@ export default function InputForm({
           value={value ?? ""}
           placeholder={`Buscar ${label.toLocaleLowerCase("es")}...`}
           onChange={(newValue) => onChange(key, newValue)}
+          required={campo.required}
         />
       )}
 
       {input === "staticSelect" && (
-        <select value={value ?? ""} onChange={handleChange} disabled={readOnly}>
+        <select
+          value={value ?? ""}
+          onChange={handleChange}
+          disabled={readOnly}
+          required={campo.required}
+        >
           {(campo.values || []).map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -70,6 +83,7 @@ export default function InputForm({
           type="date"
           value={value ? value.toDate().toISOString().split("T")[0] : ""}
           onChange={handleChange}
+          required={campo.required}
         />
       )}
 
@@ -81,6 +95,7 @@ export default function InputForm({
           max={input === "number" ? campo.max : undefined}
           onChange={handleChange}
           readOnly={readOnly}
+          required={campo.required}
         />
       )}
 

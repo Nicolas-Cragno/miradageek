@@ -36,6 +36,7 @@
     "form": true,
     "input": "select",
     "options": "sucursales",
+    "required": true,
     "use": "database",
     "dato" : "string"
   },
@@ -58,6 +59,7 @@
     "form": true,
     "input": "select",
     "options": "clientes",
+    "required": true,
     "use": "database",
     "dato" : "string"
   },
@@ -177,12 +179,13 @@
 
   {
     "key": "detalleVentas",
-    "label": "Items",
+    "label": "Productos",
     "tabla": false,
     "ficha": true,
     "form": true,
     "input": "list",
     "options": "productos",
+    "required": true,
     "use": "detailDatabase",
     "dato" : "string"
   },

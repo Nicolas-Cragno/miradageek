@@ -10,6 +10,7 @@ export default function SearchableSelect({
   onChange,
   getLabel = defaultLabel,
   placeholder = "Buscar...",
+  required = false,
 }) {
   const containerRef = useRef(null);
   const typingRef = useRef(false);
@@ -51,6 +52,7 @@ export default function SearchableSelect({
         type="search"
         value={query}
         placeholder={placeholder}
+        aria-required={required}
         onFocus={() => setOpen(true)}
         onChange={(event) => {
           typingRef.current = true;

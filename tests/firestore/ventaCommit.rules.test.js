@@ -4,22 +4,35 @@ import process from "node:process";
 import test, { after, before, beforeEach } from "node:test";
 import { initializeTestEnvironment } from "@firebase/rules-unit-testing";
 import {
+  collection,
   doc,
+  getDoc,
+  getDocs,
+  query,
   runTransaction,
   serverTimestamp,
   setDoc,
   Timestamp,
+  where,
 } from "firebase/firestore";
 
 const PROJECT_ID = "demo-geek-look";
 const UID = "qgN6KgzqAwNRPKXTsTtI4QyVrPY2";
 const USUARIO_ID = "US-A0002";
+const UID_GESTOR = "gestorRol02Uid";
+const USUARIO_GESTOR_ID = "US-A0004";
 
 let testEnv;
 
 const acceso = {
   usuarioId: USUARIO_ID,
   tipo: "04",
+  estado: true,
+};
+
+const accesoGestor = {
+  usuarioId: USUARIO_GESTOR_ID,
+  tipo: "02",
   estado: true,
 };
 
@@ -78,6 +91,12 @@ const canalInactivo = {
   id: "CV-A0006",
   nombre: "Canal inactivo",
   estado: false,
+};
+
+const canalOtros = {
+  ...canalVenta,
+  id: "CV-A0004",
+  nombre: "Otros",
 };
 
 const datosVenta = () => ({
@@ -160,10 +179,12 @@ beforeEach(async () => {
     const db = context.firestore();
     await Promise.all([
       setDoc(doc(db, "accesosUsuarios", UID), acceso),
+      setDoc(doc(db, "accesosUsuarios", UID_GESTOR), accesoGestor),
       setDoc(doc(db, "contadores", "ventas"), contadorVentas),
       setDoc(doc(db, "contadores", "detalleVentas"), contadorDetalleVentas),
       setDoc(doc(db, "productos", "PR-A00000156"), producto),
       setDoc(doc(db, "canalesVentas", "CV-A0005"), canalVenta),
+      setDoc(doc(db, "canalesVentas", "CV-A0004"), canalOtros),
       setDoc(doc(db, "canalesVentas", "CV-A0006"), canalInactivo),
       setDoc(doc(db, "canalesVentas", "CV-A0000"), canalGeneral),
     ]);
@@ -243,6 +264,66 @@ const contextoAutenticado = () => testEnv.authenticatedContext(UID, {
   email: "usuario@test.local",
   email_verified: true,
 }).firestore();
+
+const contextoGestor = () => testEnv.authenticatedContext(UID_GESTOR, {
+  email: "gestor@test.local",
+  email_verified: true,
+}).firestore();
+
+test("rol 02 lista sólo canales comerciales activos", async () => {
+  const snapshot = await getDocs(query(
+    collection(contextoGestor(), "canalesVentas"),
+    where("estado", "==", true),
+    where("id", "!=", "CV-A0000"),
+  ));
+  assert.deepEqual(
+    snapshot.docs.map((documento) => documento.id).sort(),
+    ["CV-A0004", "CV-A0005"],
+  );
+});
+
+test("rol 02 no puede listar canales sin las restricciones comerciales", async () => {
+  await assert.rejects(getDocs(collection(contextoGestor(), "canalesVentas")));
+});
+
+test("rol 02 conserva GET puntual del canal general", async () => {
+  await assert.doesNotReject(getDoc(
+    doc(contextoGestor(), "canalesVentas", "CV-A0000"),
+  ));
+});
+
+test("rol 04 conserva el listado completo de canales", async () => {
+  const snapshot = await getDocs(collection(contextoAutenticado(), "canalesVentas"));
+  assert.equal(snapshot.size, 4);
+});
+
+test("rol 02 puede crear ventas con Otros y otro canal activo", async () => {
+  await assert.doesNotReject(setDoc(
+    doc(contextoGestor(), "ventas", "VT-ROL02-OTROS"),
+    ventaModificada({
+      canal: "CV-A0004",
+      usuario: USUARIO_GESTOR_ID,
+      estadisticas: {
+        ...datosVenta().estadisticas,
+        canal: "CV-A0004",
+      },
+      detalleEstado: [{
+        ...datosVenta().detalleEstado[0],
+        usuario: USUARIO_GESTOR_ID,
+      }],
+    }),
+  ));
+  await assert.doesNotReject(setDoc(
+    doc(contextoGestor(), "ventas", "VT-ROL02-CANAL"),
+    ventaModificada({
+      usuario: USUARIO_GESTOR_ID,
+      detalleEstado: [{
+        ...datosVenta().detalleEstado[0],
+        usuario: USUARIO_GESTOR_ID,
+      }],
+    }),
+  ));
+});
 
 test("aísla UPDATE contadores/ventas", async () => {
   const db = contextoAutenticado();

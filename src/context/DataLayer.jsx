@@ -38,7 +38,7 @@ const collectionsByRoute = {
       clave: "canalesVentas",
       filtros: [
         { campo: "estado", valor: true },
-        { campo: "__name__", operador: "!=", valor: "CV-A0000" },
+        { campo: "id", operador: "!=", valor: "CV-A0000" },
       ],
     },
   ],
@@ -48,7 +48,7 @@ const collectionsByRoute = {
       clave: "canalesVentas",
       filtros: [
         { campo: "estado", valor: true },
-        { campo: "__name__", operador: "!=", valor: "CV-A0000" },
+        { campo: "id", operador: "!=", valor: "CV-A0000" },
       ],
     },
     {
