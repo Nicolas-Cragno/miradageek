@@ -5,6 +5,11 @@ import {
   normalizarTipoMovimiento,
   TIPOS_MOVIMIENTO,
 } from "../../functions/operaciones/modeloOperaciones";
+import {
+  MENSAJE_LIMITE_PRODUCTOS_MOVIMIENTO_STOCK,
+  puedeAgregarProductoMovimientoStock,
+} from "../../functions/operaciones/limitesMovimientoStock";
+import { arrayIndexOf } from "firebase/firestore/pipelines";
 
 const productLabel = (product) =>
   `${product.descripcion || product.nombre || product.id} (Stock: ${product.stock ?? 0}) | ${product.id}`;
@@ -15,17 +20,27 @@ export default function ListStockForm({
   onChange,
   tipoMovimiento,
   sucursalMovimiento,
+  limiteProductos,
 }) {
   const listado = Array.isArray(value) ? value : [];
 
   const [producto, setProducto] = useState("");
   const [stockNuevo, setStockNuevo] = useState("");
+  const [limitError, setLimitError] = useState("");
 
   const agregarItem = () => {
     if (!producto) return;
 
     const prod = productos.find((p) => String(p.id) === String(producto));
     if (!prod) return;
+
+    if (
+      limiteProductos !== undefined &&
+      !puedeAgregarProductoMovimientoStock(listado, prod.id)
+    ) {
+      setLimitError(MENSAJE_LIMITE_PRODUCTOS_MOVIMIENTO_STOCK);
+      return;
+    }
 
     const valorIngresado = Number(stockNuevo);
 
@@ -63,6 +78,7 @@ export default function ListStockForm({
       onChange([...listado, item]);
     }
 
+    setLimitError("");
     setProducto("");
     setStockNuevo("");
   };
@@ -143,9 +159,16 @@ export default function ListStockForm({
         </div>
       </div>
 
+      {limitError && (
+        <p className="form-error" role="alert">
+          {limitError}
+        </p>
+      )}
+
       <table className="listform-table">
         <thead>
           <tr>
+            <th>Código</th>
             <th>Producto</th>
             <th>Actual</th>
             <th>Nuevo</th>
@@ -163,9 +186,14 @@ export default function ListStockForm({
             </tr>
           )}
 
-          {listado.map((item) => (
+          {listado.map((item, index) => (
             <tr key={item.idProducto}>
-              <td>{item.descripcion}</td>
+              <td className="td-mini">
+                <strong>
+                  {index + 1} - {item.idProducto}
+                </strong>
+              </td>
+              <td className="td-principal">{item.descripcion}</td>
 
               <td>{item.stockActual}</td>
 

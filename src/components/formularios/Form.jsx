@@ -4,7 +4,7 @@ import "./css/Form.css";
 import { submit } from "../../functions/submits/submits";
 import InputForm from "../inputs/InputForm";
 import Loading from "../../routes/Loading";
-import { showError, showSuccess } from "../../utils/alerts";
+import { showConfirmation, showError, showSuccess } from "../../utils/alerts";
 import { useAuth } from "../../auth/AuthContext";
 import { useData } from "../../context/DataContext";
 import {
@@ -15,6 +15,11 @@ import {
   CANAL_GENERAL_ID,
   CANAL_OTROS_ID,
 } from "../../functions/operaciones/estadisticasVentas";
+import {
+  excedeLimiteProductosMovimientoStock,
+  MAX_PRODUCTOS_MOVIMIENTO_STOCK,
+  MENSAJE_LIMITE_PRODUCTOS_MOVIMIENTO_STOCK,
+} from "../../functions/operaciones/limitesMovimientoStock";
 
 const cotizacionUsdValida = (valor) => {
   const numero = Number(valor);
@@ -205,6 +210,18 @@ export default function Form({
         throw new Error(`Completá el campo obligatorio: ${campoRequeridoFaltante.label}.`);
       }
 
+      if (collection === "stock") {
+        const campoDetalleStock = campos.find(
+          (campo) => campo.use === "detailDatabase",
+        );
+        const detallesStock = campoDetalleStock
+          ? formData[campoDetalleStock.key] ?? []
+          : [];
+        if (excedeLimiteProductosMovimientoStock(detallesStock)) {
+          throw new Error(MENSAJE_LIMITE_PRODUCTOS_MOVIMIENTO_STOCK);
+        }
+      }
+
       if (["compras", "ventas"].includes(collection)) {
         if (formData.moneda === "ARS" && Number(formData.valorDivisa) !== 1) {
           throw new Error("Las operaciones en ARS deben usar valor de divisa 1.");
@@ -298,18 +315,39 @@ export default function Form({
         }
       }
 
-      await submit({
-        collection,
-        formData: mainData,
-        originalData: originalData,
-        campos,
-        idElemento: item?.id ?? null,
-        detailCollection,
-        detailRef,
-        usuario,
-        valorDolar,
-        cotizacionCosto,
-      });
+      const ejecutarGuardado = (permitirNegativo = false) =>
+        submit({
+          collection,
+          formData: mainData,
+          originalData: originalData,
+          campos,
+          idElemento: item?.id ?? null,
+          detailCollection,
+          detailRef,
+          usuario,
+          valorDolar,
+          sucursalesDisponibles: (data.sucursales || []).map(
+            (sucursal) => sucursal.id,
+          ),
+          permitirNegativo,
+          cotizacionCosto,
+        });
+
+      try {
+        await ejecutarGuardado(false);
+      } catch (error) {
+        if (error?.code !== "stock-negativo") throw error;
+        const confirmado = await showConfirmation(
+          "Stock o disponibilidad negativa",
+          error.message,
+          "Continuar igualmente",
+        );
+        if (!confirmado) {
+          setSaving(false);
+          return;
+        }
+        await ejecutarGuardado(true);
+      }
 
       setSaving(false);
 
@@ -370,6 +408,13 @@ export default function Form({
                   detailRef={detailRef}
                   monedaOperacion={formData.moneda}
                   valorDivisa={formData.valorDivisa}
+                  tipoMovimiento={formData.tipo}
+                  sucursalMovimiento={formData.sucursal}
+                  limiteProductos={
+                    collection === "stock"
+                      ? MAX_PRODUCTOS_MOVIMIENTO_STOCK
+                      : undefined
+                  }
                   readOnly={
                     cotizacionHistoricaBloqueada &&
                     ["moneda", "valorDivisa"].includes(campo.key)

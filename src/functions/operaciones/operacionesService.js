@@ -300,6 +300,57 @@ export async function guardarMovimientoManual({
       const referencia = doc(db, "productos", detalle.idProducto);
       const snapshot = await transaction.get(referencia);
       if (!snapshot.exists()) throw new Error(`No existe ${detalle.idProducto}.`);
+      if (
+        [
+          "PR-A00000104",
+          "PR-A00000105",
+          "PR-A00000106",
+          "PR-A00000108",
+          "PR-A00000109",
+        ].includes(detalle.idProducto)
+      ) {
+        const datosDebug = snapshot.data();
+        const camposDebug = [
+          "descripcion",
+          "monedaCosto",
+          "monedaPrecio",
+          "costo",
+          "precio",
+          "stock",
+          "stockSucursal",
+          "reservado",
+          "pendiente",
+          "fecha",
+          "ediciones",
+        ];
+        console.group(`[Stock debug] ${detalle.idProducto}`);
+        console.log("ID", detalle.idProducto);
+        console.log("Campos", Object.keys(datosDebug).sort());
+        console.log("Documento crudo", datosDebug);
+        console.table(
+          Object.fromEntries(
+            Object.entries(datosDebug).map(([campo, valor]) => [
+              campo,
+              {
+                tipo:
+                  valor === null
+                    ? "null"
+                    : Array.isArray(valor)
+                      ? "array"
+                      : typeof valor,
+                valor,
+              },
+            ]),
+          ),
+        );
+        console.log(
+          "Campos relevantes",
+          Object.fromEntries(
+            camposDebug.map((campo) => [campo, datosDebug[campo]]),
+          ),
+        );
+        console.groupEnd();
+      }
       productos.set(detalle.idProducto, { referencia, datos: snapshot.data() });
     }
     const contadores = await leerContadoresMovimiento(transaction, detalles.length);
@@ -340,6 +391,20 @@ export async function guardarMovimientoManual({
         );
         error.code = "stock-negativo";
         throw error;
+      }
+      if (
+        [
+          "PR-A00000104",
+          "PR-A00000105",
+          "PR-A00000106",
+          "PR-A00000108",
+          "PR-A00000109",
+        ].includes(detalle.idProducto)
+      ) {
+        console.log(
+          `[Stock debug] UPDATE ${detalle.idProducto}`,
+          actualizado,
+        );
       }
       transaction.update(producto.referencia, actualizado);
       movimientoDetalles.push({

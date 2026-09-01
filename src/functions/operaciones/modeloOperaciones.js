@@ -96,9 +96,8 @@ export const normalizarStockSucursal = (
   }
 
   if (
-    sucursalesDisponibles.length !== 1 ||
-    sucursalesDisponibles[0] !== SUCURSAL_HISTORICA ||
-    sucursalMovimiento !== SUCURSAL_HISTORICA
+    sucursalMovimiento !== SUCURSAL_HISTORICA ||
+    !sucursalesDisponibles.includes(SUCURSAL_HISTORICA)
   ) {
     throw new Error(
       "El producto no tiene distribución por sucursal. Definila antes de realizar el movimiento.",

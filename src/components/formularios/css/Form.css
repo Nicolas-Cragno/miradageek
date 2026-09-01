@@ -16,7 +16,8 @@
 }
 
 .modal-form {
-  width: min(800px, 90vw);
+
+  width: min(900px, 90vw);
   max-height: 90vh;
   overflow-y: auto;
   background: var(--color-white);

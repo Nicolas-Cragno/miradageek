@@ -13,6 +13,7 @@ export default function InputForm({
   valorDivisa,
   tipoMovimiento,
   sucursalMovimiento,
+  limiteProductos,
   readOnly = false,
 }) {
   const { key, label, input = "text", options } = campo;
@@ -115,6 +116,7 @@ export default function InputForm({
           value={value ?? []}
           tipoMovimiento={tipoMovimiento}
           sucursalMovimiento={sucursalMovimiento}
+          limiteProductos={limiteProductos}
           onChange={(nuevoValor) => onChange(key, nuevoValor)}
         />
       )}
