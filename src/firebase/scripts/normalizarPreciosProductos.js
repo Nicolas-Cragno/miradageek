@@ -9,7 +9,7 @@ initializeApp({
 const db = getFirestore();
 
 const DRY_RUN = true;
-const CONFIRMAR_ESCRITURA = false;
+const CONFIRMAR_ESCRITURA = falsec;
 
 function convertirNumero(valor) {
     if (valor === null || valor === undefined) {

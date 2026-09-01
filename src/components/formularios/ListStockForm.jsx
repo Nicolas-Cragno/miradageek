@@ -7,7 +7,7 @@ import {
 } from "../../functions/operaciones/modeloOperaciones";
 
 const productLabel = (product) =>
-  `${product.descripcion || product.nombre || product.id} (Stock: ${product.stock ?? 0})`;
+  `${product.descripcion || product.nombre || product.id} (Stock: ${product.stock ?? 0}) | ${product.id}`;
 
 export default function ListStockForm({
   productos = [],
@@ -95,10 +95,9 @@ export default function ListStockForm({
         <SearchableSelect
           options={productos}
           value={producto}
-          placeholder="Buscar producto..."
+          placeholder="Buscar productao..."
           getLabel={productLabel}
           onChange={(id) => {
-
             setProducto(id);
 
             const prod = productos.find((p) => String(p.id) === String(id));
@@ -110,8 +109,9 @@ export default function ListStockForm({
                   )
                 : null;
               setStockNuevo(
-                normalizarTipoMovimiento(tipoMovimiento) === TIPOS_MOVIMIENTO.AJUSTE
-                  ? stockSucursal?.stock ?? prod.stock ?? 0
+                normalizarTipoMovimiento(tipoMovimiento) ===
+                  TIPOS_MOVIMIENTO.AJUSTE
+                  ? (stockSucursal?.stock ?? prod.stock ?? 0)
                   : "",
               );
             }
@@ -123,7 +123,8 @@ export default function ListStockForm({
             type="number"
             value={stockNuevo}
             placeholder={
-              normalizarTipoMovimiento(tipoMovimiento) === TIPOS_MOVIMIENTO.AJUSTE
+              normalizarTipoMovimiento(tipoMovimiento) ===
+              TIPOS_MOVIMIENTO.AJUSTE
                 ? "Nuevo stock"
                 : "Cantidad"
             }
