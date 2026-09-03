@@ -3,7 +3,9 @@ import "./css/ListForm.css";
 import SearchableSelect from "../inputs/SearchableSelect";
 
 const productLabel = (product) =>
-  product.descripcion || product.nombre || product.id;
+  (product.descripcion && product.id + " | " + product.descripcion) ||
+  product.nombre ||
+  product.id;
 
 export default function ListForm({
   productos = [],
@@ -196,6 +198,8 @@ export default function ListForm({
       <table className="listform-table">
         <thead>
           <tr>
+            <th></th>
+            <th>Código</th>
             <th>Producto</th>
             <th>Cant.</th>
             <th>Precio</th>
@@ -216,9 +220,11 @@ export default function ListForm({
             </tr>
           )}
 
-          {listado.map((item) => (
+          {listado.map((item, index) => (
             <tr key={item.idProducto}>
-              <td>{item.descripcion}</td>
+              <td className="td-index">{index + 1}.</td>
+              <td className="td-mini">{item.idProducto}</td>
+              <td className="td-mini">{item.descripcion}</td>
 
               <td>
                 <input

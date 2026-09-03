@@ -3,6 +3,17 @@ import { FiSearch as SearchLogo } from "react-icons/fi";
 import "./css/Tabla.css";
 import { formatearCampoFirestore } from "../../functions/DataFunctions";
 
+const fechaEnMilisegundos = (valor) => {
+  if (valor instanceof Date) return valor.getTime();
+  if (typeof valor?.toMillis === "function") return valor.toMillis();
+  if (typeof valor?.toDate === "function") return valor.toDate().getTime();
+  if (typeof valor?.seconds === "number") {
+    return valor.seconds * 1000 + Number(valor.nanoseconds || 0) / 1_000_000;
+  }
+  if (typeof valor === "string") return Date.parse(valor);
+  return Number.NaN;
+};
+
 export default function Tabla({
   data = [],
   campos = [],
@@ -26,19 +37,33 @@ export default function Tabla({
       })
       .filter((filter) => typeof filter === "function");
 
-    if (!texto && !filtrosActivos.length) return data;
+    const resultados = !texto && !filtrosActivos.length
+      ? data
+      : data.filter((item) => {
+        if (!filtrosActivos.every((filter) => filter(item))) return false;
+        if (!texto) return true;
 
-    return data.filter((item) => {
-      if (!filtrosActivos.every((filter) => filter(item))) return false;
-      if (!texto) return true;
+        return camposTabla.some((campo) => {
+          const valor = item[campo.key];
 
-      return camposTabla.some((campo) => {
-        const valor = item[campo.key];
+          if (valor === null || valor === undefined) return false;
 
-        if (valor === null || valor === undefined) return false;
-
-        return String(valor).toLowerCase().includes(texto);
+          return String(valor).toLowerCase().includes(texto);
+        });
       });
+
+    if (!camposTabla.some((campo) => campo.key === "fecha")) return resultados;
+
+    return [...resultados].sort((a, b) => {
+      const fechaA = fechaEnMilisegundos(a.fecha);
+      const fechaB = fechaEnMilisegundos(b.fecha);
+      const validaA = Number.isFinite(fechaA);
+      const validaB = Number.isFinite(fechaB);
+
+      if (!validaA && !validaB) return 0;
+      if (!validaA) return 1;
+      if (!validaB) return -1;
+      return fechaB - fechaA;
     });
   }, [data, busqueda, camposTabla, filtros, filtrosSeleccionados]);
 

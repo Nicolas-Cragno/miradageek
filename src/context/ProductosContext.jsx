@@ -21,10 +21,11 @@ export function ProductosProvider({ children }) {
           stock: Number(pd.stock ?? 0),
           pendiente: Number(pd.pendiente ?? 0),
           reservado: Number(pd.reservado ?? 0),
-          disponible:
-            Number(pd.stock ?? 0) - Number(pd.reservado ?? 0),
-          stockSucursal: Array.isArray(pd.stockSucursal) ? pd.stockSucursal : [],
-
+          disponible: Number(pd.stock ?? 0) - Number(pd.reservado ?? 0),
+          stockSucursal: Array.isArray(pd.stockSucursal)
+            ? pd.stockSucursal
+            : [],
+          labelDescripcion: `${pd.id} ${pd.descripcion}`,
           labelCosto: `${monedaCosto?.simbolo || "$"} ${pd.costo ?? 0}`,
           labelPrecio: `${monedaPrecio?.simbolo || "$"} ${pd.precio ?? 0}`,
 

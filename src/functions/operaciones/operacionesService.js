@@ -1230,6 +1230,39 @@ export async function registrarCumplimiento({
   });
 }
 
+const serializarAnulacionDebug = (valor) => JSON.stringify(
+  normalizarValorDebug(valor),
+);
+
+const normalizarValorDebug = (valor) => {
+  if (valor instanceof Date) {
+    return { tipo: "Date", iso: valor.toISOString() };
+  }
+  if (
+    valor
+    && typeof valor.toDate === "function"
+    && typeof valor.seconds === "number"
+    && typeof valor.nanoseconds === "number"
+  ) {
+    return {
+      tipo: "Timestamp",
+      seconds: valor.seconds,
+      nanoseconds: valor.nanoseconds,
+      iso: valor.toDate().toISOString(),
+    };
+  }
+  if (Array.isArray(valor)) return valor.map(normalizarValorDebug);
+  if (valor && typeof valor === "object") {
+    return Object.fromEntries(
+      Object.entries(valor).map(([clave, dato]) => [
+        clave,
+        normalizarValorDebug(dato),
+      ]),
+    );
+  }
+  return valor;
+};
+
 export async function anularOperacion({
   coleccion,
   operacion,
@@ -1251,6 +1284,9 @@ export async function anularOperacion({
     const operacionSnapshot = await transaction.get(operacionRef);
     if (!operacionSnapshot.exists()) throw new Error("La operación ya no existe.");
     const datosOperacion = operacionSnapshot.data();
+    console.log(
+      `[ANULACION DEBUG] Venta completa JSON ${serializarAnulacionDebug(datosOperacion)}`,
+    );
     if (datosOperacion.estado === ESTADOS_OPERACION.ANULADA) {
       throw new Error("La operación ya está anulada.");
     }
@@ -1270,6 +1306,12 @@ export async function anularOperacion({
         const referencia = doc(db, "productos", idProducto);
         const snapshot = await transaction.get(referencia);
         if (!snapshot.exists()) throw new Error(`No existe el producto ${idProducto}.`);
+        console.log(
+          `[ANULACION DEBUG] Producto completo JSON ${serializarAnulacionDebug({
+            id: idProducto,
+            data: snapshot.data(),
+          })}`,
+        );
         productos.set(idProducto, { referencia, datos: snapshot.data() });
       }
     }
@@ -1335,10 +1377,16 @@ export async function anularOperacion({
           });
         }
       }
+      console.log(
+        `[ANULACION DEBUG] Patch producto JSON ${serializarAnulacionDebug({
+          id: idProducto,
+          patch: actualizacion,
+        })}`,
+      );
       transaction.update(producto.referencia, actualizacion);
     }
 
-    transaction.update(operacionRef, {
+    const actualizacionOperacion = {
       estado: ESTADOS_OPERACION.ANULADA,
       ...(huellaNueva ? { estadisticas: huellaNueva } : {}),
       detalleEstado: [
@@ -1351,7 +1399,11 @@ export async function anularOperacion({
           detalle: motivo.trim(),
         },
       ],
-    });
+    };
+    console.log(
+      `[ANULACION DEBUG] Patch venta JSON ${serializarAnulacionDebug(actualizacionOperacion)}`,
+    );
+    transaction.update(operacionRef, actualizacionOperacion);
 
     if (contadores && movimientoDetalles.length) {
       transaction.update(contadores.stockRef, contadores.asignacionStock.contador);

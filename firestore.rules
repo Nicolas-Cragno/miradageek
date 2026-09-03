@@ -216,20 +216,132 @@ service cloud.firestore {
         validTimestamp('fecha');
     }
 
-    function validLegacyStockOnlyUpdate() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['stock', 'stockSucursal']) &&
-        request.resource.data.keys().hasAll(['descripcion']) &&
-        request.resource.data.keys().hasOnly([
-          'id', 'descripcion', 'marca', 'tipo', 'costo', 'precio', 'stock',
-          'monedaCosto', 'monedaPrecio', 'imagen', 'fecha', 'pendiente',
-          'reservado', 'stockSucursal', 'ediciones'
+    function productFieldChanged(field) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny([field]);
+    }
+
+    function validChangedProductNumber(field, minValue, maxValue) {
+      return !productFieldChanged(field) ||
+        (request.resource.data[field] is number &&
+         request.resource.data[field] >= minValue &&
+         request.resource.data[field] <= maxValue);
+    }
+
+    function validChangedProductCurrency(field) {
+      return !productFieldChanged(field) ||
+        request.resource.data[field] in ['ARS', 'USD'];
+    }
+
+    function validChangedProductStockSucursal() {
+      return !productFieldChanged('stockSucursal') ||
+        (request.resource.data.stockSucursal is list &&
+         request.resource.data.stockSucursal.size() <= 100);
+    }
+
+    function validOperationProductEdition(entry, field) {
+      return entry is map &&
+        entry.keys().hasAll([
+          'fecha', 'usuario', 'campo', 'valorAnterior', 'valorNuevo'
         ]) &&
-        validText('descripcion', 500) &&
-        validOptionalNumber('stock', -999999999, 999999999) &&
-        (!('stockSucursal' in request.resource.data) ||
-          (request.resource.data.stockSucursal is list &&
-           request.resource.data.stockSucursal.size() <= 100));
+        entry.keys().hasOnly([
+          'fecha', 'usuario', 'campo', 'valorAnterior', 'valorNuevo'
+        ]) &&
+        entry.fecha is timestamp &&
+        entry.usuario == accesoActual().usuarioId &&
+        entry.campo == field &&
+        entry.valorAnterior == resource.data.get(field, null) &&
+        entry.valorNuevo == request.resource.data[field];
+    }
+
+    function validOperationProductEditions(valueField, currencyField) {
+      let valueChanged = productFieldChanged(valueField);
+      let currencyChanged = productFieldChanged(currencyField);
+      let previousEditions = resource.data.get('ediciones', []);
+      let nextEditions = request.resource.data.get('ediciones', []);
+      let added = (valueChanged ? 1 : 0) + (currencyChanged ? 1 : 0);
+      return (
+          (!valueChanged && !currencyChanged && !productFieldChanged('ediciones')) ||
+          ((valueChanged || currencyChanged) &&
+           (!('ediciones' in resource.data) || previousEditions is list) &&
+           nextEditions is list &&
+           nextEditions.size() <= 1000 &&
+           nextEditions.size() == previousEditions.size() + added &&
+           nextEditions[0:previousEditions.size()] == previousEditions &&
+           ((valueChanged && currencyChanged &&
+             validOperationProductEdition(
+               nextEditions[nextEditions.size() - 2], valueField
+             ) &&
+             validOperationProductEdition(
+               nextEditions[nextEditions.size() - 1], currencyField
+             )) ||
+            (valueChanged && !currencyChanged &&
+             validOperationProductEdition(
+               nextEditions[nextEditions.size() - 1], valueField
+             )) ||
+            (!valueChanged && currencyChanged &&
+             validOperationProductEdition(
+               nextEditions[nextEditions.size() - 1], currencyField
+             ))))
+        );
+    }
+
+    function validModernProductUpdate() {
+      return validProduct() &&
+        validLegacyNumberField('costo', 0, 999999999999) &&
+        validLegacyNumberField('precio', 0, 999999999999);
+    }
+
+    function validStockProductUpdate() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasAny(['stock', 'stockSucursal']) &&
+        changed.hasOnly(['stock', 'stockSucursal']) &&
+        validChangedProductNumber('stock', -999999999, 999999999) &&
+        validChangedProductStockSucursal();
+    }
+
+    function validSaleProductUpdate() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasAny([
+          'reservado', 'precio', 'monedaPrecio', 'stock', 'stockSucursal'
+        ]) &&
+        changed.hasOnly([
+          'reservado', 'precio', 'monedaPrecio', 'ediciones',
+          'stock', 'stockSucursal'
+        ]) &&
+        validChangedProductNumber('reservado', 0, 999999999) &&
+        validChangedProductNumber('precio', 0, 999999999999) &&
+        validChangedProductCurrency('monedaPrecio') &&
+        (!changed.hasAny(['precio', 'monedaPrecio', 'ediciones']) ||
+         validOperationProductEditions('precio', 'monedaPrecio'));
+    }
+
+    function validPurchaseProductUpdate() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasAny([
+          'pendiente', 'costo', 'monedaCosto', 'stock', 'stockSucursal'
+        ]) &&
+        changed.hasOnly([
+          'pendiente', 'costo', 'monedaCosto', 'ediciones',
+          'stock', 'stockSucursal'
+        ]) &&
+        validChangedProductNumber('pendiente', 0, 999999999) &&
+        validChangedProductNumber('costo', 0, 999999999999) &&
+        validChangedProductCurrency('monedaCosto') &&
+        (!changed.hasAny(['costo', 'monedaCosto', 'ediciones']) ||
+         validOperationProductEditions('costo', 'monedaCosto'));
+    }
+
+    function validCommercialProductUpdate() {
+      return validSaleProductUpdate() || validPurchaseProductUpdate();
+    }
+
+    function preservesProductId() {
+      return (
+          ('id' in resource.data &&
+           'id' in request.resource.data &&
+           request.resource.data.id == resource.data.id) ||
+          (!('id' in resource.data) && !('id' in request.resource.data))
+        );
     }
 
     function validOperation(referenceField) {
@@ -507,11 +619,10 @@ service cloud.firestore {
         validOptionalNumber('precio', 0, 999999999999) &&
         (!('id' in request.resource.data) || request.resource.data.id == documentId);
       allow update: if puedeGestionarOperaciones() &&
-        ((validProduct() &&
-          validLegacyNumberField('costo', 0, 999999999999) &&
-          validLegacyNumberField('precio', 0, 999999999999)) ||
-         validLegacyStockOnlyUpdate()) &&
-        (!('id' in resource.data) || request.resource.data.id == resource.data.id);
+        (validModernProductUpdate() ||
+         validStockProductUpdate() ||
+         validCommercialProductUpdate()) &&
+        preservesProductId();
       allow delete: if puedeGestionarOperaciones();
     }
 

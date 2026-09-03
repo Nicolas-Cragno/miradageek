@@ -440,7 +440,7 @@ export default function Form({
           <div className="form-buttons">
             {!isMobile && (
               <button type="button" className="btn-secondary" onClick={onClose}>
-                Cancelara
+                Cancelar
               </button>
             )}
 

@@ -48,16 +48,22 @@
 }
 
 .listform-table td {
-  padding: 2px 8px;
+  padding: 2px 2px;
+
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+ /* white-space: nowrap;*/
 }
 
 .td-mini{
   font-size: small;
 }
+.td-mini2{
+  font-size: x-small;
+  font-weight: bolder;
+}
+
 
 
 .listform-table tbody {
