@@ -10,7 +10,8 @@
 .tabla-search {
   flex-shrink: 0;
   display: flex;
-  justify-content: lef;
+  flex-wrap: wrap;
+  justify-content: left;
   align-items: center;
   width: 100%;
   gap: 5px;
@@ -27,6 +28,19 @@
 
 .tabla-search-icon {
   opacity: .6;
+}
+
+.tabla-filter {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 18px;
+}
+
+.tabla-filter select {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
 }
 
 .tabla-scroll {
@@ -70,9 +84,18 @@
 
 .tabla th,
 .tabla td {
-  padding: 10px 12px;
+  padding: 10px 4px;
   text-align: left;
-  font-size: 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* para la columa detalle de productos*/
+.tabla th:nth-child(2),
+.tabla td:nth-child(2) {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

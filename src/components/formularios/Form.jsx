@@ -118,21 +118,21 @@ export default function Form({
 
   if (!open) return null;
   const camposForm = campos.filter((c) => c.form);
-  const campoDetalleForm = campos.find((campo) => campo.use === "detailDatabase");
+  const campoDetalleForm = campos.find(
+    (campo) => campo.use === "detailDatabase",
+  );
   const detallesOriginales = campoDetalleForm
     ? originalData[campoDetalleForm.key] || []
     : [];
   const cotizacionHistoricaBloqueada =
     collection === "ventas" &&
     Boolean(item) &&
-    (
-      Number(originalData.estadisticas?.ventas || 0) > 0 ||
+    (Number(originalData.estadisticas?.ventas || 0) > 0 ||
       detallesOriginales.some(
         (detalle) =>
           Number(detalle.cantidadCumplida || 0) > 0 ||
           (detalle.cumplimientos || []).length > 0,
-      )
-    );
+      ));
 
   function handleChange(key, value) {
     if (key === "moneda" && ["compras", "ventas"].includes(collection)) {
@@ -202,12 +202,16 @@ export default function Form({
     try {
       const campoRequeridoFaltante = camposForm.find((campo) => {
         if (!campo.required) return false;
-        const historicoSinCampo = Boolean(item) &&
-          !valorRequeridoPresente(originalData[campo.key]);
-        return !historicoSinCampo && !valorRequeridoPresente(formData[campo.key]);
+        const historicoSinCampo =
+          Boolean(item) && !valorRequeridoPresente(originalData[campo.key]);
+        return (
+          !historicoSinCampo && !valorRequeridoPresente(formData[campo.key])
+        );
       });
       if (campoRequeridoFaltante) {
-        throw new Error(`Completá el campo obligatorio: ${campoRequeridoFaltante.label}.`);
+        throw new Error(
+          `Completá el campo obligatorio: ${campoRequeridoFaltante.label}.`,
+        );
       }
 
       if (collection === "stock") {
@@ -215,7 +219,7 @@ export default function Form({
           (campo) => campo.use === "detailDatabase",
         );
         const detallesStock = campoDetalleStock
-          ? formData[campoDetalleStock.key] ?? []
+          ? (formData[campoDetalleStock.key] ?? [])
           : [];
         if (excedeLimiteProductosMovimientoStock(detallesStock)) {
           throw new Error(MENSAJE_LIMITE_PRODUCTOS_MOVIMIENTO_STOCK);
@@ -224,9 +228,14 @@ export default function Form({
 
       if (["compras", "ventas"].includes(collection)) {
         if (formData.moneda === "ARS" && Number(formData.valorDivisa) !== 1) {
-          throw new Error("Las operaciones en ARS deben usar valor de divisa 1.");
+          throw new Error(
+            "Las operaciones en ARS deben usar valor de divisa 1.",
+          );
         }
-        if (formData.moneda === "USD" && !cotizacionUsdValida(formData.valorDivisa)) {
+        if (
+          formData.moneda === "USD" &&
+          !cotizacionUsdValida(formData.valorDivisa)
+        ) {
           throw new Error("Ingresá una cotización USD válida y distinta de 1.");
         }
       }
@@ -290,20 +299,24 @@ export default function Form({
         }
       }
 
-      const campoDetalle = campos.find((campo) => campo.use === "detailDatabase");
-      const detalles = campoDetalle ? formData[campoDetalle.key] ?? [] : [];
+      const campoDetalle = campos.find(
+        (campo) => campo.use === "detailDatabase",
+      );
+      const detalles = campoDetalle ? (formData[campoDetalle.key] ?? []) : [];
       const idsExistentes = new Set(
-        (campoDetalle ? originalData[campoDetalle.key] ?? [] : [])
+        (campoDetalle ? (originalData[campoDetalle.key] ?? []) : [])
           .filter((detalle) => detalle.id)
           .map((detalle) => detalle.id),
       );
-      const requiereCotizacionCosto = collection === "ventas" && detalles.some((detalle) => {
-        if (detalle.id && idsExistentes.has(detalle.id)) return false;
-        const producto = (data.productos || []).find(
-          (actual) => String(actual.id) === String(detalle.idProducto),
-        );
-        return String(producto?.monedaCosto || "ARS").toUpperCase() === "USD";
-      });
+      const requiereCotizacionCosto =
+        collection === "ventas" &&
+        detalles.some((detalle) => {
+          if (detalle.id && idsExistentes.has(detalle.id)) return false;
+          const producto = (data.productos || []).find(
+            (actual) => String(actual.id) === String(detalle.idProducto),
+          );
+          return String(producto?.monedaCosto || "ARS").toUpperCase() === "USD";
+        });
       let cotizacionCosto = null;
       if (requiereCotizacionCosto) {
         try {
@@ -427,7 +440,7 @@ export default function Form({
           <div className="form-buttons">
             {!isMobile && (
               <button type="button" className="btn-secondary" onClick={onClose}>
-                Cancelar
+                Cancelara
               </button>
             )}
 

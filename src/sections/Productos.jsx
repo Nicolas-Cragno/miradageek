@@ -1,6 +1,7 @@
 import { useProductos } from "../context/ProductosContext";
 import Section from "./Section";
 import campos from "../data/campos/camposProductos.json";
+import { filtrosProductos } from "../config/filtrosTablas";
 
 export default function Productos() {
   const { productos = [] } = useProductos();
@@ -12,6 +13,7 @@ export default function Productos() {
       title="Productos"
       collection="productos"
       buttonStock={true}
+      filtros={filtrosProductos}
     />
   );
 }

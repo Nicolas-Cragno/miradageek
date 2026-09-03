@@ -111,6 +111,7 @@
   {
     "key": "stock",
     "label": "Stock",
+    "tabla": true,
     "ficha": true,
     "form": false,
     "dato": "number"

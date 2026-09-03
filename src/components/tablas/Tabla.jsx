@@ -3,26 +3,44 @@ import { FiSearch as SearchLogo } from "react-icons/fi";
 import "./css/Tabla.css";
 import { formatearCampoFirestore } from "../../functions/DataFunctions";
 
-export default function Tabla({ data = [], campos = [], onSelect }) {
+export default function Tabla({
+  data = [],
+  campos = [],
+  onSelect,
+  filtros = [],
+}) {
   const [busqueda, setBusqueda] = useState("");
+  const [filtrosSeleccionados, setFiltrosSeleccionados] = useState({});
 
-  const camposTabla = campos.filter((c) => c.tabla);
+  const camposTabla = useMemo(() => campos.filter((c) => c.tabla), [campos]);
 
   const datosFiltrados = useMemo(() => {
-    if (!busqueda.trim()) return data;
+    const texto = busqueda.trim().toLowerCase();
+    const filtrosActivos = filtros
+      .map((filtro) => {
+        const valorSeleccionado =
+          filtrosSeleccionados[filtro.id] ?? filtro.options?.[0]?.value;
+        return filtro.options?.find(
+          (option) => option.value === valorSeleccionado,
+        )?.filter;
+      })
+      .filter((filter) => typeof filter === "function");
 
-    const texto = busqueda.toLowerCase();
+    if (!texto && !filtrosActivos.length) return data;
 
-    return data.filter((item) =>
-      camposTabla.some((campo) => {
+    return data.filter((item) => {
+      if (!filtrosActivos.every((filter) => filter(item))) return false;
+      if (!texto) return true;
+
+      return camposTabla.some((campo) => {
         const valor = item[campo.key];
 
         if (valor === null || valor === undefined) return false;
 
         return String(valor).toLowerCase().includes(texto);
-      }),
-    );
-  }, [data, busqueda, camposTabla]);
+      });
+    });
+  }, [data, busqueda, camposTabla, filtros, filtrosSeleccionados]);
 
   if (!data.length) {
     return <p className="tabla-empty">...</p>;
@@ -39,6 +57,31 @@ export default function Tabla({ data = [], campos = [], onSelect }) {
           className="search-input"
         />
         <SearchLogo className="tabla-search-icon" />
+
+        {filtros.map((filtro) => (
+          <label className="tabla-filter" key={filtro.id}>
+            <span>{filtro.label}</span>
+            <select
+              value={
+                filtrosSeleccionados[filtro.id] ??
+                filtro.options?.[0]?.value ??
+                ""
+              }
+              onChange={(event) =>
+                setFiltrosSeleccionados((seleccionados) => ({
+                  ...seleccionados,
+                  [filtro.id]: event.target.value,
+                }))
+              }
+            >
+              {filtro.options?.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
       </div>
 
       <div className="tabla-scroll">

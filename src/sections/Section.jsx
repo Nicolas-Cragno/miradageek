@@ -24,6 +24,7 @@ export default function Section({
   renderActions = null,
   permitirAlta = true,
   mensajeAltaDeshabilitada = "Alta temporalmente deshabilitada",
+  filtros = [],
 }) {
   const { user } = useAuth();
   const puedeGestionar = puedeGestionarOperaciones(user);
@@ -125,7 +126,12 @@ export default function Section({
               </div>
             </div>
 
-            <Tabla data={data} campos={campos} onSelect={seleccionar} />
+            <Tabla
+              data={data}
+              campos={campos}
+              onSelect={seleccionar}
+              filtros={filtros}
+            />
           </div>
 
           <div className="section-detail">
@@ -189,7 +195,12 @@ export default function Section({
               )}
             </div>
 
-            <Tabla data={data} campos={campos} onSelect={seleccionar} />
+            <Tabla
+              data={data}
+              campos={campos}
+              onSelect={seleccionar}
+              filtros={filtros}
+            />
           </div>
         ) : view === "form" ? (
           <FormComponent

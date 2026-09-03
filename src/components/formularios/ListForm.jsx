@@ -2,7 +2,8 @@ import { useState } from "react";
 import "./css/ListForm.css";
 import SearchableSelect from "../inputs/SearchableSelect";
 
-const productLabel = (product) => product.descripcion || product.nombre || product.id;
+const productLabel = (product) =>
+  product.descripcion || product.nombre || product.id;
 
 export default function ListForm({
   productos = [],
@@ -82,7 +83,9 @@ export default function ListForm({
 
     onChange(
       listado.map((item) =>
-        String(item.idProducto) === String(id) ? { ...item, cantidad: num } : item,
+        String(item.idProducto) === String(id)
+          ? { ...item, cantidad: num }
+          : item,
       ),
     );
   };
@@ -92,7 +95,9 @@ export default function ListForm({
     if (!Number.isFinite(num) || num < 0) return;
     onChange(
       listado.map((item) =>
-        String(item.idProducto) === String(id) ? { ...item, precio: num } : item,
+        String(item.idProducto) === String(id)
+          ? { ...item, precio: num }
+          : item,
       ),
     );
   };
@@ -119,17 +124,21 @@ export default function ListForm({
 
             if (prod) {
               const precioProducto =
-                 tipoOperacion === "compra" ? prod.costo : prod.precio;
+                tipoOperacion === "compra" ? prod.costo : prod.precio;
               const precioNumerico = Number(precioProducto);
               const monedaProducto =
                 tipoOperacion === "compra"
                   ? prod.monedaCosto || "ARS"
                   : prod.monedaPrecio || "ARS";
-              const monedaNormalizada = String(monedaProducto).trim().toUpperCase();
+              const monedaNormalizada = String(monedaProducto)
+                .trim()
+                .toUpperCase();
               let origen;
               if (["ARS", "PESO", "PESOS"].includes(monedaNormalizada)) {
                 origen = "ARS";
-              } else if (["USD", "DOLARES", "DÓLARES"].includes(monedaNormalizada)) {
+              } else if (
+                ["USD", "DOLARES", "DÓLARES"].includes(monedaNormalizada)
+              ) {
                 origen = "USD";
               } else {
                 setPrecio("");
@@ -140,11 +149,19 @@ export default function ListForm({
               }
               const destino = monedaOperacion || "ARS";
               const cotizacion = Number(valorDivisa);
-              let convertido = Number.isFinite(precioNumerico) ? precioNumerico : 0;
+              let convertido = Number.isFinite(precioNumerico)
+                ? precioNumerico
+                : 0;
               if (origen === "USD" && destino === "ARS") {
-                convertido *= Number.isFinite(cotizacion) && cotizacion > 0 ? cotizacion : 1;
+                convertido *=
+                  Number.isFinite(cotizacion) && cotizacion > 0
+                    ? cotizacion
+                    : 1;
               } else if (origen === "ARS" && destino === "USD") {
-                convertido /= Number.isFinite(cotizacion) && cotizacion > 0 ? cotizacion : 1;
+                convertido /=
+                  Number.isFinite(cotizacion) && cotizacion > 0
+                    ? cotizacion
+                    : 1;
               }
               setPrecio(convertido);
             }
@@ -226,7 +243,8 @@ export default function ListForm({
               <td>{Number(item.cantidadCumplida || 0)}</td>
               <td>
                 {Math.max(
-                  Number(item.cantidad || 0) - Number(item.cantidadCumplida || 0),
+                  Number(item.cantidad || 0) -
+                    Number(item.cantidadCumplida || 0),
                   0,
                 )}
               </td>
