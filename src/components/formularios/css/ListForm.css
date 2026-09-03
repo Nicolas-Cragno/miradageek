@@ -1,144 +1,239 @@
-.listform {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
+  .listform {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 
-  margin-top: 20px;
+    margin-top: 20px;
 
-  border: 1px solid var(--color-surface);
-  border-radius: 10px;
+    border: 1px solid var(--color-surface);
+    border-radius: 10px;
 
-  background: var(--color-white);
-  color: #111;
-}
+    background: var(--color-white);
+    color: #111;
+  }
 
-.listform-header {
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--color-shadow);
-}
+  .listform-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--color-shadow);
+  }
 
-.listform-add {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 90px 90px 90px 90px;
-  gap: 20px;
-  padding: 10px;
-  align-items: center;
-  border-bottom: 1px solid var(--color-shadow);
-}
+  .listform-add {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px 90px 90px 90px;
+    gap: 20px;
+    padding: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--color-shadow);
+  }
 
-.listform-add > * {
-  min-width: 0;
-}
+  .listform-add > * {
+    min-width: 0;
+  }
 
-.listform-table-container {
-  width: 100%;
-  overflow-x: auto;
-}
+  .listform-table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
 
-.listform-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
+  .listform-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
 
-.listform-table th {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid var(--color-shadow);
-}
+  .listform-table th {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid var(--color-shadow);
+  }
 
+  .listform-table td {
+    padding: 2px 2px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  /* white-space: nowrap;*/
+  }
+
+  
+
+  .listform-table tbody {
+    display: block;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  .listform-table thead,
+  .listform-table tbody tr {
+    display: table;
+
+    width: 100%;
+
+    table-layout: fixed;
+  }
+
+  .listform-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .listform-table input {
+    width: 50%;
+    padding: 6px;
+    border: 1px solid var(--color-surface);
+    border-radius: 6px;
+    background: var(--color-white);
+    color: #111;
+  }
+
+  .listform-total {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+
+    padding: 18px 24px;
+
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: x-large;
+    color: var(--color-title);
+  }
+
+  .btn-add {
+    width: 100%;
+    background-color: var(--color-title);
+  }
+
+
+  .stock-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .stock-actions input {
+    flex: 1;
+  }
+
+  .stock-actions button {
+    width: 140px;
+  }
+
+  .stock-up {
+    color: #16a34a;
+    font-weight: 600;
+  }
+
+  .stock-down {
+    color: #dc2626;
+    font-weight: 600;
+  }
+
+  /* Anchos de columna ↓↓↓*/
+
+.listform-table th,
 .listform-table td {
-  padding: 2px 2px;
-
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-  text-overflow: ellipsis;
- /* white-space: nowrap;*/
+  box-sizing: border-box;
 }
 
-.td-mini{
-  font-size: small;
-}
-.td-mini2{
-  font-size: x-small;
-  font-weight: bolder;
-}
-
-
-
-.listform-table tbody {
-  display: block;
-  max-height: 250px;
-  overflow-y: auto;
+.listform-table th:nth-child(1),
+.listform-table td:nth-child(1) {
+  width: 30px;
+  text-align: center;
+  padding-left: 2px;
+  padding-right: 2px;
 }
 
-.listform-table thead,
-.listform-table tbody tr {
-  display: table;
-
-  width: 100%;
-
-  table-layout: fixed;
+/* id */
+.listform-table th:nth-child(2),
+.listform-table td:nth-child(2) {
+  width: 115px;
+  text-align: center;
 }
 
-.listform-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+.listform-table .td-codigo {
+  white-space: nowrap;
+  font-size: 12px;
 }
 
-.listform-table input {
-  width: 50%;
-  padding: 6px;
-  border: 1px solid var(--color-surface);
-  border-radius: 6px;
-  background: var(--color-white);
-  color: #111;
+/* descripcion */
+.listform-table th:nth-child(3),
+.listform-table td:nth-child(3) {
+  width: 295px;
 }
 
-.listform-total {
-  display: flex;
-  justify-content: flex-end;
-  gap: 20px;
-
-  padding: 18px 24px;
-
-  font-size: 18px;
-  font-weight: bold;
+.listform-table .td-descripcion {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  overflow-wrap: break-word;
+  line-height: 1.1;
 }
 
-.btn-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: x-large;
-  color: var(--color-title);
+/* cantidad */
+.listform-table th:nth-child(4),
+.listform-table td:nth-child(4) {
+  width: 80px;
+  text-align: center;
 }
 
-.btn-add {
-  width: 100%;
-  background-color: var(--color-title);
+/* precio */
+.listform-table th:nth-child(5),
+.listform-table td:nth-child(5) {
+  width: 95px;
+  text-align: center;
 }
 
-
-.stock-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+/* cumplido */
+.listform-table th:nth-child(6),
+.listform-table td:nth-child(6) {
+  width: 100px;
+  text-align: center;
 }
 
-.stock-actions input {
-  flex: 1;
+/* restante */
+/*
+.listform-table th:nth-child(7),
+.listform-table td:nth-child(7) {
+  width: 80px;
+  text-align: center;
+}
+*/
+
+/* moneda */
+/*
+.listform-table th:nth-child(8),
+.listform-table td:nth-child(8) {
+  width: 70px;
+  text-align: center;
+}
+*/
+
+/* subtotal  */
+.listform-table th:nth-child(9),
+.listform-table td:nth-child(9) {
+  width: 105px;
+  text-align: right;
 }
 
-.stock-actions button {
-  width: 140px;
+/* tachito para borrar */
+.listform-table th:nth-child(10),
+.listform-table td:nth-child(10) {
+  width: 40px;
+  text-align: center;
 }
 
-.stock-up {
-  color: #16a34a;
-  font-weight: 600;
+/* inputs */
+.listform-table td:nth-child(3.5) input {
+  width: 60px;
 }
 
-.stock-down {
-  color: #dc2626;
-  font-weight: 600;
+.listform-table td:nth-child(5) input {
+  width: 75px;
 }

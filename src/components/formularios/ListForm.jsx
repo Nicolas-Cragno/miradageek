@@ -204,8 +204,7 @@ export default function ListForm({
             <th>Cant.</th>
             <th>Precio</th>
             <th>Cumplida</th>
-            <th>Restante</th>
-            <th>Moneda</th>
+
             <th>Subtotal</th>
             <th></th>
           </tr>
@@ -223,8 +222,8 @@ export default function ListForm({
           {listado.map((item, index) => (
             <tr key={item.idProducto}>
               <td className="td-index">{index + 1}.</td>
-              <td className="td-mini">{item.idProducto}</td>
-              <td className="td-mini">{item.descripcion}</td>
+              <td className="td-codigo">{item.idProducto}</td>
+              <td className="td-descripcion">{item.descripcion}</td>
 
               <td>
                 <input
@@ -246,17 +245,9 @@ export default function ListForm({
                   }
                 />
               </td>
-              <td>{Number(item.cantidadCumplida || 0)}</td>
-              <td>
-                {Math.max(
-                  Number(item.cantidad || 0) -
-                    Number(item.cantidadCumplida || 0),
-                  0,
-                )}
-              </td>
-              <td>{item.moneda}</td>
+              <td>{Number(item.cantidadCumplida || 0)} / {Number(item.cantidad)}</td>
 
-              <td>${(item.cantidad * item.precio).toLocaleString()}</td>
+              <td>{item.moneda} {(item.cantidad * item.precio).toLocaleString()}</td>
 
               <td>
                 <button
