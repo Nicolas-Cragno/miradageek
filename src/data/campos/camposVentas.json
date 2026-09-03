@@ -179,7 +179,7 @@
 
   {
     "key": "detalleVentas",
-    "label": "Productos",
+    "label": "",
     "tabla": false,
     "ficha": true,
     "form": true,

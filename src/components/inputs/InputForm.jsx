@@ -37,7 +37,7 @@ export default function InputForm({
     <div className="form-group">
       <label>
         {label}
-        {campo.required ? " *" : ""}
+        {(campo.required && (campo.key !=="detalleVentas" && campo.key !== "detalleCompras")) ? " *" : ""}
       </label>
 
       {input === "disabled" && (
