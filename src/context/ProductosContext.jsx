@@ -13,6 +13,11 @@ export function ProductosProvider({ children }) {
         const monedaCosto = monedas.find((mn) => mn.key === pd.monedaCosto);
 
         const monedaPrecio = monedas.find((mn) => mn.key === pd.monedaPrecio);
+        // GABO NO QUERIA VER STOCK Y RESERVADO POR SEPARADOS
+        const labelStock =
+          (Number(pd.stock) || 0) > 0
+            ? Number(pd.stock) - (Number(pd.reservado) || 0)
+            : 0;
 
         const tipo = tipos.find((tp) => tp.id === pd.tipo);
 
@@ -28,7 +33,7 @@ export function ProductosProvider({ children }) {
           labelDescripcion: `${pd.id} ${pd.descripcion}`,
           labelCosto: `${monedaCosto?.simbolo || "$"} ${pd.costo ?? 0}`,
           labelPrecio: `${monedaPrecio?.simbolo || "$"} ${pd.precio ?? 0}`,
-
+          labelStock: labelStock,
           labelTipo: tipo
             ? `${tipo.nombre} (${tipo.detalle})`
             : "Sin especificar",

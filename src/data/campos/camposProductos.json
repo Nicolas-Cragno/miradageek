@@ -109,7 +109,7 @@
     "dato": "string"
   },
   {
-    "key": "stock",
+    "key": "labelStock",
     "label": "Stock",
     "tabla": true,
     "ficha": true,
@@ -123,13 +123,7 @@
     "form": false,
     "dato": "number"
   },
-  {
-    "key": "reservado",
-    "label": "Reservado",
-    "ficha": true,
-    "form": false,
-    "dato": "number"
-  },
+ 
   {
     "key": "disponible",
     "label": "Disponible",
