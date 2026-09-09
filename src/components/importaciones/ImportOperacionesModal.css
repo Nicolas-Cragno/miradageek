@@ -11,8 +11,8 @@
 }
 .import-operaciones-modal {
   box-sizing: border-box;
-  width: min(1600px, 96vw);
-  max-height: 94dvh;
+  /*width: min(1600px, 96vw);*/
+  max-height: 94svh;
   display: flex;
   flex-direction: column;
   min-width: 0;
