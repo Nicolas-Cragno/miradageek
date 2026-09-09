@@ -102,3 +102,22 @@
   .import-operaciones-contenido { padding: 0 12px 12px; }
   .import-operaciones-grilla input, .import-operaciones-grilla select { font-size: 16px; }
 }
+
+.import-operaciones-confirmacion { z-index: 1200; }
+.import-operaciones-progreso {
+  padding: 12px;
+  border-radius: 6px;
+  background: #eef3ff;
+  color: #243e74;
+  font-weight: 600;
+}
+.import-operaciones-resultado {
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid #d5d9df;
+  border-radius: 8px;
+}
+.import-operaciones-resultado h3 { margin: 0 0 10px; }
+.import-operaciones-errores { padding-left: 20px; color: #8c2626; }
+.import-operaciones-errores li { margin-bottom: 12px; overflow-wrap: anywhere; }
+.import-operaciones-errores p { margin: 4px 0 0; white-space: pre-wrap; }

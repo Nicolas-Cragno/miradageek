@@ -3,6 +3,8 @@ import test from "node:test";
 import * as XLSX from "xlsx/xlsx.mjs";
 import {
   buscarCoincidencia,
+  construirOperacionImportada,
+  obtenerMensajeErrorImportacion,
   formatearFechaImportacion,
   leerExcel,
   normalizarFilasExcel,
@@ -218,4 +220,124 @@ test("rechaza extensión, archivo vacío, falsos Excel, hoja vacía y encabezado
   await assert.rejects(leerExcel(archivoExcel([["Producto", "Costo", "Fecha"]]), "compras"), /filas de datos/);
   await assert.rejects(leerExcel(archivoExcel([["Producto", "Costo", "Precio", "Fecha"], ["A", 1, 2, "2-ago"]]), "compras"), /más de una columna/);
   await assert.rejects(leerExcel(archivoExcel([]), "stock"), /Solo se pueden/);
+});
+
+const contextoGuardado = {
+  usuario: "US-A0005",
+  valorDolar: 1400,
+  sucursalesDisponibles: ["SC-A0001"],
+};
+
+test("payload de venta ARS conserva importes históricos y Date del preview", () => {
+  const fila = normalizar();
+  const antes = structuredClone(fila);
+  const payload = construirOperacionImportada({ fila, collection: "ventas", ...contextoGuardado });
+  assert.deepEqual(payload.data, {
+    sucursal: "SC-A0001", cliente: "CL-A0000", canal: "CV-A0004",
+    moneda: "ARS", valorDivisa: 1, estado: "COMPLETADA", descuento: 0,
+  });
+  assert.equal(payload.collection, "ventas");
+  assert.equal(payload.detailCollection, "detalleVentas");
+  assert.equal(payload.detailRef, "venta");
+  assert.deepEqual(payload.detalleNuevo, [{
+    idProducto: "P1", cantidad: 1, precio: 218000, costo: 159000, monedaCosto: "ARS",
+  }]);
+  assert.equal(payload.fechaOperacion, fila.fecha);
+  assert.equal(payload.usarCostoDetalle, true);
+  assert.equal(payload.permitirNegativo, false);
+  assert.equal(payload.usuario, "US-A0005");
+  assert.equal(payload.valorDolar, 1400);
+  assert.deepEqual(payload.sucursalesDisponibles, ["SC-A0001"]);
+  assert.deepEqual(payload.detalleOriginal, []);
+  assert.equal("idElemento" in payload, false);
+  assert.equal("fecha" in payload.data, false);
+  assert.equal("gananciaExcel" in payload.detalleNuevo[0], false);
+  assert.deepEqual(fila, antes);
+});
+
+test("payload de compra usa costo Excel como precio y no agrega snapshot de venta", () => {
+  const fila = normalizar({ cantidad: 3, costo: 500 }, "compras");
+  const payload = construirOperacionImportada({ fila, collection: "compras", ...contextoGuardado });
+  assert.deepEqual(payload.data, {
+    sucursal: "SC-A0001", proveedor: "PV-A0001",
+    moneda: "ARS", valorDivisa: 1, estado: "COMPLETADA", descuento: 0,
+  });
+  assert.equal(payload.collection, "compras");
+  assert.equal(payload.detailCollection, "detalleCompras");
+  assert.equal(payload.detailRef, "compra");
+  assert.deepEqual(payload.detalleNuevo, [{ idProducto: "P1", cantidad: 3, precio: 500 }]);
+  assert.equal(payload.usarCostoDetalle, false);
+  assert.equal(payload.permitirNegativo, false);
+  assert.equal(payload.fechaOperacion, fila.fecha);
+});
+
+test("USD usa cotización de la importación para operación y costo histórico de venta", () => {
+  const fila = normalizar({ moneda: "USD", precio: 150, costo: 100 });
+  const payload = construirOperacionImportada({ fila, collection: "ventas", ...contextoGuardado });
+  assert.equal(payload.data.valorDivisa, 1400);
+  assert.equal(payload.detalleNuevo[0].valorDivisaCosto, 1400);
+  assert.equal(payload.detalleNuevo[0].monedaCosto, "USD");
+  assert.equal(payload.detalleNuevo[0].precio, 150);
+  assert.equal(payload.detalleNuevo[0].costo, 100);
+});
+
+test("cotización explícita válida tiene prioridad para USD; ARS siempre usa uno", () => {
+  for (const collection of ["ventas", "compras"]) {
+    const fila = { ...normalizar({ moneda: "USD" }, collection), valorDivisa: 1200 };
+    const payload = construirOperacionImportada({ fila, collection, ...contextoGuardado });
+    assert.equal(payload.data.valorDivisa, 1200);
+    assert.equal(payload.valorDolar, 1400);
+    if (collection === "ventas") assert.equal(payload.detalleNuevo[0].valorDivisaCosto, 1200);
+    const ars = construirOperacionImportada({ fila: { ...fila, moneda: "ARS" }, collection, ...contextoGuardado });
+    assert.equal(ars.data.valorDivisa, 1);
+  }
+});
+
+test("cotización explícita inválida usa el servicio, nunca inventa un valor", () => {
+  for (const valorDivisa of [undefined, null, 0, -1, 1, NaN, Infinity]) {
+    const payload = construirOperacionImportada({
+      fila: { ...normalizar({ moneda: "USD" }), valorDivisa }, collection: "ventas", ...contextoGuardado,
+    });
+    assert.equal(payload.data.valorDivisa, 1400);
+  }
+  assert.throws(() => construirOperacionImportada({
+    fila: normalizar({ moneda: "USD" }), collection: "ventas", ...contextoGuardado, valorDolar: 1,
+  }), /cotización USD/);
+});
+
+test("payload rechaza usuario UID, cotización inválida y costos faltantes sin fallback al producto", () => {
+  const base = { fila: normalizar(), collection: "ventas", ...contextoGuardado };
+  for (const usuario of [undefined, "", "firebaseUid", "US-123"]) {
+    assert.throws(() => construirOperacionImportada({ ...base, usuario }), /usuario interno/);
+  }
+  for (const valorDolar of [null, 0, -1, NaN, Infinity]) {
+    assert.throws(() => construirOperacionImportada({ ...base, valorDolar }), /cotización oficial/);
+  }
+  for (const costo of [undefined, null, NaN, -1, Infinity]) {
+    assert.throws(() => construirOperacionImportada({ ...base, fila: { ...base.fila, costo } }), /importes históricos/);
+  }
+  assert.throws(() => construirOperacionImportada({ ...base, collection: "stock" }), /Solo se pueden/);
+});
+
+test("dos filas repetidas producen dos payloads nuevos de un detalle, en orden del preview", () => {
+  const filas = normalizarFilasExcel([
+    { ...original, filaExcel: 2, fecha: "10/08/2026" },
+    { ...original, filaExcel: 5, fecha: "01/08/2026" },
+  ], "ventas", data);
+  const payloads = filas.map((fila) => construirOperacionImportada({ fila, collection: "ventas", ...contextoGuardado }));
+  assert.equal(payloads.length, 2);
+  assert.equal(payloads[0].detalleNuevo.length, 1);
+  assert.equal(payloads[1].detalleNuevo.length, 1);
+  assert.notEqual(payloads[0], payloads[1]);
+  assert.equal(payloads[0].fechaOperacion.getDate(), 10);
+  assert.equal(payloads[1].fechaOperacion.getDate(), 1);
+});
+
+test("mensajes de error conservan motivo, sin stack ni objeto Firebase", () => {
+  assert.equal(obtenerMensajeErrorImportacion(new Error("Stock insuficiente.")), "Stock insuficiente.");
+  assert.equal(obtenerMensajeErrorImportacion({ message: "permission-denied\nstack interno", stack: "secreto" }), "permission-denied");
+  assert.equal(obtenerMensajeErrorImportacion({ message: "x".repeat(2000) }).length, 1000);
+  for (const error of [undefined, null, {}, { message: "" }, { message: {} }]) {
+    assert.equal(obtenerMensajeErrorImportacion(error), "Error desconocido al guardar la operación.");
+  }
 });

@@ -212,7 +212,9 @@ export function validarFilaImportacion(fila, collection, data) {
 export function normalizarFilasExcel(filas, collection, data, { hoy = new Date(), date1904 = false } = {}) {
   validarColeccion(collection);
   return filas.map((original) => {
-    const fecha = resolverFechaImportacion(original.fecha, hoy, date1904);
+    const fecha = vacio(original.fecha)
+  ? fechaLocal(hoy.getFullYear(), hoy.getMonth() + 1, hoy.getDate())
+  : resolverFechaImportacion(original.fecha, hoy, date1904);
     const fila = {
       filaExcel: original.filaExcel,
       productoOriginal: texto(original.producto),
@@ -244,4 +246,65 @@ export function normalizarFilasExcel(filas, collection, data, { hoy = new Date()
     }
     return validarFilaImportacion(fila, collection, data);
   });
+}
+
+// Traduce una fila validada al contrato existente; no lee ni escribe Firestore.
+export function construirOperacionImportada({
+  fila, collection, usuario, valorDolar, sucursalesDisponibles,
+}) {
+  validarColeccion(collection);
+  if (typeof usuario !== "string" || !/^US-[A-Z][0-9]{4}$/.test(usuario)) {
+    throw new Error("No pudimos identificar tu usuario interno. Cerrá sesión y volvé a ingresar.");
+  }
+  if (!Number.isFinite(valorDolar) || valorDolar <= 0) {
+    throw new Error("No se pudo obtener una cotización oficial válida. No se inició la importación.");
+  }
+  const esVenta = collection === "ventas";
+  if (!Number.isFinite(fila.costo) || fila.costo < 0 ||
+    (esVenta && (!Number.isFinite(fila.precio) || fila.precio < 0))) {
+    throw new Error("Los importes históricos de la fila no son válidos.");
+  }
+  if (!["ARS", "USD"].includes(fila.moneda)) throw new Error("La moneda de la fila no es válida.");
+  const cotizacionExplicita = Number.isFinite(fila.valorDivisa) && fila.valorDivisa > 1;
+  const valorDivisa = fila.moneda === "ARS" ? 1 : cotizacionExplicita ? fila.valorDivisa : valorDolar;
+  if (fila.moneda === "USD" && (!Number.isFinite(valorDivisa) || valorDivisa <= 1)) {
+    throw new Error("No se pudo obtener una cotización USD válida. No se inició la importación.");
+  }
+  return {
+    collection,
+    data: {
+      sucursal: fila.sucursalId,
+      ...(esVenta ? { cliente: fila.clienteId, canal: fila.canalId } : { proveedor: fila.proveedorId }),
+      moneda: fila.moneda,
+      valorDivisa,
+      estado: "COMPLETADA",
+      descuento: 0,
+    },
+    detailCollection: esVenta ? "detalleVentas" : "detalleCompras",
+    detailRef: esVenta ? "venta" : "compra",
+    detalleNuevo: [{
+      idProducto: fila.productoId,
+      cantidad: fila.cantidad,
+      precio: esVenta ? fila.precio : fila.costo,
+      ...(esVenta ? {
+        costo: fila.costo,
+        monedaCosto: fila.moneda,
+        ...(fila.moneda === "USD" ? { valorDivisaCosto: valorDivisa } : {}),
+      } : {}),
+    }],
+    detalleOriginal: [],
+    usuario,
+    valorDolar,
+    sucursalesDisponibles,
+    permitirNegativo: false,
+    fechaOperacion: fila.fecha,
+    usarCostoDetalle: esVenta,
+  };
+}
+
+export function obtenerMensajeErrorImportacion(error) {
+  const mensaje = typeof error?.message === "string"
+    ? error.message.split(/\r?\n/)[0].trim().slice(0, 1000)
+    : "";
+  return mensaje || "Error desconocido al guardar la operación.";
 }
