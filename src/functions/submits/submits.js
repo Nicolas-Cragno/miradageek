@@ -14,6 +14,8 @@ export async function submit({
   sucursalesDisponibles = [],
   permitirNegativo = false,
   cotizacionCosto = null,
+  fechaOperacion = null,
+  usarCostoDetalle = false,
 }) {
   const data = {};
 
@@ -40,6 +42,8 @@ export async function submit({
     sucursalesDisponibles,
     permitirNegativo,
     cotizacionCosto,
+    fechaOperacion,
+    usarCostoDetalle,
   });
 
   return idReturn;

@@ -1,0 +1,104 @@
+.import-operaciones-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--color-blur, #0008);
+  backdrop-filter: blur(4px);
+}
+.import-operaciones-modal {
+  box-sizing: border-box;
+  width: min(1600px, 96vw);
+  max-height: 94dvh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--color-white, white);
+  color: #111;
+  border-radius: 14px;
+  box-shadow: 0 12px 42px #0005;
+  overflow: hidden;
+}
+.import-operaciones-header,
+.import-operaciones-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  flex-shrink: 0;
+}
+.import-operaciones-header h2 { margin: 0 0 6px; font-size: 1.3rem; }
+.import-operaciones-header p { margin: 0; font-size: .9rem; }
+.import-operaciones-contenido { padding: 0 20px 16px; overflow: auto; min-height: 0; }
+.import-operaciones-archivo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  background: #f7f8fa;
+  overflow-wrap: anywhere;
+}
+.import-operaciones-archivo input { max-width: 100%; }
+.import-operaciones-arrastrando { border-color: var(--color-title, #394a70); background: #eef3ff; }
+.import-operaciones-resumen { font-weight: 600; margin: 14px 0; }
+.import-operaciones-grilla { overflow: auto; max-height: 55dvh; border: 1px solid #d5d9df; }
+.import-operaciones-grilla table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .82rem; }
+.import-operaciones-grilla th,
+.import-operaciones-grilla td {
+  padding: 6px;
+  text-align: left;
+  vertical-align: top;
+  border-right: 1px solid #d5d9df;
+  border-bottom: 1px solid #d5d9df;
+}
+.import-operaciones-grilla th { position: sticky; top: 0; z-index: 1; background: #eef0f4; white-space: nowrap; }
+.import-operaciones-grilla input,
+.import-operaciones-grilla select {
+  box-sizing: border-box;
+  padding: 7px;
+  border: 1px solid #b9bec8;
+  border-radius: 4px;
+  background: white;
+  color: #111;
+  font: inherit;
+}
+.import-operaciones-grilla select { width: 190px; }
+.import-operaciones-grilla select[aria-label^="Moneda"] { width: 80px; }
+.import-operaciones-numero { width: 105px; }
+.import-operaciones-fecha { width: 125px; }
+.import-operaciones-producto-original { min-width: 190px; max-width: 260px; overflow-wrap: anywhere; }
+.import-operaciones-original { display: block; margin-top: 5px; max-width: 190px; overflow-wrap: anywhere; color: #555; }
+.import-operaciones-estado { min-width: 210px; }
+.import-operaciones-estado ul { padding-left: 16px; margin: 6px 0 0; color: #8c2626; }
+.import-operaciones-revisar { background: #fff8f5; }
+.import-operaciones-lista { color: #176038; }
+.import-operaciones-pendiente { color: #8c2626; }
+.import-operaciones-advertencia { color: #775400; margin: 6px 0 0; }
+.import-operaciones-error { background: #fee2e2; color: #991b1b; border-radius: 6px; padding: 10px; }
+.import-operaciones-modal button {
+  padding: 8px 12px;
+  border: 1px solid #b9bec8;
+  border-radius: 6px;
+  background: white;
+  color: #111;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.import-operaciones-modal button:disabled { opacity: .55; cursor: not-allowed; }
+.import-operaciones-modal :focus-visible { outline: 2px solid #335bb1; outline-offset: 2px; }
+.import-operaciones-footer { border-top: 1px solid #ddd; }
+.import-operaciones-footer span { margin-right: auto; font-size: .85rem; }
+@media (max-width: 768px) {
+  .import-operaciones-overlay { padding: 6px; }
+  .import-operaciones-modal { width: 100%; max-height: 98dvh; }
+  .import-operaciones-header, .import-operaciones-footer { padding: 12px; }
+  .import-operaciones-contenido { padding: 0 12px 12px; }
+  .import-operaciones-grilla input, .import-operaciones-grilla select { font-size: 16px; }
+}

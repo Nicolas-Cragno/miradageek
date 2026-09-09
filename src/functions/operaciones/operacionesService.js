@@ -231,6 +231,7 @@ const prepararMovimiento = ({
   sucursal,
   usuario,
   detalles,
+  fecha = null,
 }) => ({
   tipo:
     coleccion === "compras"
@@ -242,6 +243,7 @@ const prepararMovimiento = ({
   origenTipo: coleccion,
   origenId: operacionId,
   detalles,
+  fecha,
 });
 
 const escribirMovimiento = ({
@@ -259,7 +261,7 @@ const escribirMovimiento = ({
     usuario: movimiento.usuario,
     origenTipo: movimiento.origenTipo,
     origenId: movimiento.origenId,
-    fecha: serverTimestamp(),
+    fecha: movimiento.fecha || serverTimestamp(),
   });
   movimiento.detalles.forEach((detalle, indice) => {
     const detalleId = asignacionDetalles.codigos[indice];
@@ -271,7 +273,7 @@ const escribirMovimiento = ({
       stockAnterior: detalle.stockAnterior,
       stockNuevo: detalle.stockNuevo,
       tipo: movimiento.tipo,
-      fecha: serverTimestamp(),
+      fecha: movimiento.fecha || serverTimestamp(),
     });
   });
 };
@@ -529,6 +531,8 @@ export async function guardarOperacionNucleo({
   sucursalesDisponibles = [],
   permitirNegativo = false,
   cotizacionCosto = null,
+  fechaOperacion = null,
+  usarCostoDetalle = false,
 }) {
   validarUsuarioInterno(usuario);
   validarDetalles(detalleNuevo);
@@ -537,6 +541,13 @@ export async function guardarOperacionNucleo({
   const estadoSolicitado = data.estado || ESTADOS_OPERACION.PENDIENTE;
   const esAltaCompletada = !idElemento && estadoSolicitado === ESTADOS_OPERACION.COMPLETADA;
   const fechaCambio = Timestamp.now();
+  const fechaOperacionResuelta =
+    fechaOperacion instanceof Timestamp
+      ? fechaOperacion
+      : fechaOperacion instanceof Date
+        ? Timestamp.fromDate(fechaOperacion)
+        : null;
+  const fechaCumplimiento = fechaOperacionResuelta || fechaCambio;
 
   if (!idElemento && (!Number.isFinite(valorDolar) || valorDolar <= 0)) {
     throw new Error(
@@ -652,10 +663,21 @@ export async function guardarOperacionNucleo({
           }
         } else {
           const producto = productos.get(detalle.idProducto)?.datos;
-          const costo = numeroSeguro(producto?.costo, Number.NaN);
-          const monedaCosto = normalizarMoneda(producto?.monedaCosto);
+          const costoProducto = numeroSeguro(producto?.costo, Number.NaN);
+          const costoDetalle = numeroSeguro(detalle.costo, Number.NaN);
+          const costo = usarCostoDetalle && Number.isFinite(costoDetalle)
+            ? costoDetalle
+            : costoProducto;
+          const monedaCosto = usarCostoDetalle
+            ? normalizarMoneda(detalle.monedaCosto || data.moneda)
+            : normalizarMoneda(producto?.monedaCosto);
           const valorDivisaCosto = monedaCosto === "USD"
-            ? numeroSeguro(cotizacionCosto, Number.NaN)
+            ? usarCostoDetalle
+              ? numeroSeguro(
+                  detalle.valorDivisaCosto ?? data.valorDivisa,
+                  Number.NaN,
+                )
+              : numeroSeguro(cotizacionCosto, Number.NaN)
             : 1;
           if (!Number.isFinite(costo) || costo < 0) {
             throw new Error("El producto no tiene un costo válido para guardar su valor histórico.");
@@ -674,7 +696,7 @@ export async function guardarOperacionNucleo({
           normalizado.valorDivisaCosto = valorDivisaCosto;
           normalizado.costoEnPesos = costo * valorDivisaCosto;
           normalizado.cumplimientos = esAltaCompletada
-            ? [{ fecha: fechaCambio, cantidad: numeroSeguro(detalle.cantidad) }]
+            ? [{ fecha: fechaCumplimiento, cantidad: numeroSeguro(detalle.cantidad) }]
             : [];
         }
       }
@@ -760,7 +782,7 @@ export async function guardarOperacionNucleo({
     }
 
     if (!idElemento) {
-      datosOperacion.fecha = serverTimestamp();
+      datosOperacion.fecha = fechaOperacionResuelta || serverTimestamp();
       datosOperacion.usuario = usuario;
       datosOperacion.modificaciones = [];
       datosOperacion.valorDolar = valorDolar;
@@ -842,7 +864,7 @@ export async function guardarOperacionNucleo({
         indiceNuevo += 1;
         transaction.set(doc(db, detailCollection, detalleId), {
           ...detalleLimpio,
-          fecha: serverTimestamp(),
+          fecha: fechaOperacionResuelta || serverTimestamp(),
           ediciones: [],
         });
       }
@@ -991,6 +1013,7 @@ export async function guardarOperacionNucleo({
           sucursal: data.sucursal,
           usuario,
           detalles: movimientoDetalles,
+          fecha: fechaOperacionResuelta,
         }),
         asignacionStock,
         asignacionDetalles: asignacionDetalleStock,

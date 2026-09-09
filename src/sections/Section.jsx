@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 
 import Tabla from "../components/tablas/Tabla";
 import Ficha from "../components/fichas/Ficha";
@@ -12,6 +12,8 @@ import { useAuth } from "../auth/AuthContext";
 import { puedeGestionarOperaciones } from "../auth/permisos";
 import TransferenciaForm from "../components/formularios/TransferenciaForm";
 
+const ImportOperacionesModal = lazy(() => import("../components/importaciones/ImportOperacionesModal"));
+
 export default function Section({
   data = [],
   campos = [],
@@ -23,6 +25,7 @@ export default function Section({
   buttonStock = false,
   renderActions = null,
   permitirAlta = true,
+  permitirImportacion = false,
   mensajeAltaDeshabilitada = "Alta temporalmente deshabilitada",
   filtros = [],
 }) {
@@ -31,6 +34,7 @@ export default function Section({
   const [selected, setSelected] = useState(null);
   const [formType, setFormType] = useState("default");
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [transferenciaOpen, setTransferenciaOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -98,6 +102,16 @@ export default function Section({
     setView("list");
   };
 
+  const modalImportacion = puedeGestionar && permitirImportacion && importOpen ? (
+    <Suspense fallback={<div className="modal-overlay" role="status">Cargando importador…</div>}>
+      <ImportOperacionesModal
+        open={importOpen}
+        collection={collection}
+        onClose={() => setImportOpen(false)}
+      />
+    </Suspense>
+  ) : null;
+
   if (!isMobile) {
     return (
       <>
@@ -114,6 +128,9 @@ export default function Section({
                     />
                     <TextButton text={"Ajuste stock"} onClick={ajusteStock} />
                   </>
+                )}
+                {puedeGestionar && permitirImportacion && (
+                  <TextButton text="Importar datos" onClick={() => setImportOpen(true)} />
                 )}
                 {puedeGestionar && permitirAlta && (
                   <TextButton
@@ -170,6 +187,7 @@ export default function Section({
             onSave={guardar}
           />
         )}
+        {modalImportacion}
       </>
     );
   } else {
@@ -179,6 +197,9 @@ export default function Section({
           <div className="section-list">
             <div className="section-header ">
               <h1>{title}</h1>
+              {puedeGestionar && permitirImportacion && (
+                <TextButton text="Importar datos" onClick={() => setImportOpen(true)} />
+              )}
               {puedeGestionar && permitirAlta && (
                 <TextButton
                   text={"Nuevo"}
@@ -264,6 +285,7 @@ export default function Section({
             onSave={guardar}
           />
         )}
+        {modalImportacion}
       </>
     );
   }

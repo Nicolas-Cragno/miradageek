@@ -16,6 +16,7 @@ export default function Compras() {
       detailCollection="detalleCompras"
       detailRef="compra"
       filtros={filtrosOperaciones}
+      permitirImportacion
       renderActions={(operacion) => (
         <AccionesOperacion operacion={operacion} coleccion="compras" />
       )}
