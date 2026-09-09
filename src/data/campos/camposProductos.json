@@ -109,7 +109,7 @@
     "dato": "string"
   },
   {
-    "key": "labelStock",
+    "key": "stock",
     "label": "Stock",
     "tabla": true,
     "ficha": true,
@@ -118,15 +118,15 @@
   },
   {
     "key": "pendiente",
-    "label": "Pendiente",
+    "label": "Esperando ingreso",
     "ficha": true,
     "form": false,
     "dato": "number"
   },
  
   {
-    "key": "disponible",
-    "label": "Disponible",
+    "key": "reservado",
+    "label": "Reservado para venta",
     "ficha": true,
     "form": false,
     "dato": "number"
