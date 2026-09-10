@@ -230,7 +230,7 @@
 }
 
 /* inputs */
-.listform-table td:nth-child(4) input {
+.listform-table td:nth-child(3) input {
   width: 60px;
 }
 

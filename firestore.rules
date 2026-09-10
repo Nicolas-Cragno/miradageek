@@ -777,7 +777,9 @@ service cloud.firestore {
         validOptionalNumber('totalPrecios', 0, 999999999999999) &&
         (!('totalGanancia' in request.resource.data) ||
           request.resource.data.totalGanancia is number) &&
-        validTimestamp('ultimaVenta') &&
+        (!('ultimaVenta' in request.resource.data) ||
+  request.resource.data.ultimaVenta == null ||
+  request.resource.data.ultimaVenta is timestamp) &&
         (!('meses' in request.resource.data) ||
           (request.resource.data.meses is map &&
            request.resource.data.meses.size() <= 240));
