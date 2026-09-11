@@ -337,6 +337,21 @@ service cloud.firestore {
       return validSaleProductUpdate() || validPurchaseProductUpdate();
     }
 
+    function validLegacyProductInitialization() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return changed.hasAny(['pendiente', 'reservado', 'ediciones']) &&
+        changed.hasOnly(['pendiente', 'reservado', 'ediciones']) &&
+        (!changed.hasAny(['pendiente']) ||
+          (!('pendiente' in resource.data) &&
+           request.resource.data.get('pendiente', null) == 0)) &&
+        (!changed.hasAny(['reservado']) ||
+          (!('reservado' in resource.data) &&
+           request.resource.data.get('reservado', null) == 0)) &&
+        (!changed.hasAny(['ediciones']) ||
+          (!('ediciones' in resource.data) &&
+           request.resource.data.get('ediciones', null) == []));
+    }
+
     function preservesProductId() {
       return (
           ('id' in resource.data &&
@@ -623,7 +638,8 @@ service cloud.firestore {
       allow update: if puedeGestionarOperaciones() &&
         (validModernProductUpdate() ||
          validStockProductUpdate() ||
-         validCommercialProductUpdate()) &&
+         validCommercialProductUpdate() ||
+         validLegacyProductInitialization()) &&
         preservesProductId();
       allow delete: if puedeGestionarOperaciones();
     }

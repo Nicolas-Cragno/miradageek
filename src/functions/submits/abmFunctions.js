@@ -86,6 +86,15 @@ export async function guardarOperacion({
     });
   }
 
+  if (collectionName === "productos" && !idElemento) {
+    if (
+      !["ARS", "USD"].includes(data.monedaCosto) ||
+      !["ARS", "USD"].includes(data.monedaPrecio)
+    ) {
+      throw new Error("Seleccioná ARS o USD para la moneda del costo y del precio.");
+    }
+  }
+
   return runTransaction(db, async (transaction) => {
     const mainCounterRef = idElemento
       ? null
@@ -145,6 +154,7 @@ export async function guardarOperacion({
             stock: 0,
             pendiente: 0,
             reservado: 0,
+            ediciones: [],
             stockSucursal: sucursalesDisponibles.map((sucursal) => ({
               sucursal,
               stock: 0,

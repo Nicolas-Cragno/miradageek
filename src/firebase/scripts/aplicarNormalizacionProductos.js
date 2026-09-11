@@ -1,6 +1,6 @@
 // Temporal: importar manualmente en desarrollo. Importar NO ejecuta la migración.
 import { db, auth } from '../firebaseConfig.js';
-import { collection, getDocsFromServer, runTransaction } from 'firebase/firestore';
+import { collection, doc, getDocsFromServer, runTransaction } from 'firebase/firestore';
 import { calcularCambios } from './politicaNormalizacionProductos.js';
 
 if (import.meta.env?.DEV && typeof window !== 'undefined') {
@@ -61,5 +61,46 @@ if (import.meta.env?.DEV && typeof window !== 'undefined') {
       ejecutando = false;
     }
   };
-  if (import.meta.hot) import.meta.hot.dispose(() => { delete window.aplicarNormalizacionProductos; });
+  window.aplicarNormalizacionProducto = async (idProducto) => {
+    let iniciada = false;
+    try {
+      if (typeof idProducto !== 'string' || !idProducto.trim() || idProducto.includes('/')) {
+        throw new Error('Indicá un ID de producto válido, sin barras.');
+      }
+      if (!auth.currentUser) throw new Error('Iniciá sesión antes de normalizar.');
+      if (ejecutando) throw new Error('Ya hay una normalización en curso.');
+      ejecutando = true;
+      iniciada = true;
+      const referencia = doc(db, 'productos', idProducto);
+      const camposActualizados = await runTransaction(db, async transaction => {
+        const actual = await transaction.get(referencia);
+        if (!actual.exists()) throw new Error(`No existe el producto ${idProducto}.`);
+        const anterior = actual.data();
+        const cambios = calcularCambios(anterior);
+        console.log('[PRODUCTO NORMALIZACION] ESTADO ANTERIOR', { idProducto, anterior });
+        console.log('[PRODUCTO NORMALIZACION] CAMBIOS CALCULADOS', { idProducto, cambios });
+        const campos = Object.keys(cambios);
+        if (!campos.length) return [];
+        const update = Object.fromEntries(campos.map(campo => [campo, cambios[campo].nuevo]));
+        transaction.update(referencia, update);
+        return campos;
+      });
+      const resultado = {
+        idProducto,
+        estado: camposActualizados.length ? 'actualizado' : 'sin cambios',
+        camposActualizados,
+      };
+      console.log('[PRODUCTO NORMALIZACION] RESULTADO EXITOSO', resultado);
+      return resultado;
+    } catch (error) {
+      console.error('[PRODUCTO NORMALIZACION] ERROR', { idProducto, error });
+      throw error;
+    } finally {
+      if (iniciada) ejecutando = false;
+    }
+  };
+  if (import.meta.hot) import.meta.hot.dispose(() => {
+    delete window.aplicarNormalizacionProductos;
+    delete window.aplicarNormalizacionProducto;
+  });
 }
