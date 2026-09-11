@@ -25,6 +25,75 @@ import {
   validarCanalSeleccionable,
 } from "./estadisticasVentas";
 
+// INICIO DEBUG TEMPORAL VENTA: retirar este bloque al terminar.
+const DEBUG_TRANSACCION = 'CAPTURAR_SIN_GUARDAR'; // null para desactivar.
+const crearCapturaVenta = (original) => {
+  const anteriores = new Map();
+  const escrituras = [];
+  const tipar = (valor) => {
+    if (valor === undefined) return { tipo: 'inexistente' };
+    if (valor === null) return { tipo: 'null', valor: null };
+    if (valor instanceof Timestamp) return {
+      tipo: 'Timestamp', seconds: valor.seconds, nanoseconds: valor.nanoseconds,
+    };
+    if (valor?.isEqual && valor.isEqual(serverTimestamp())) {
+      return { tipo: 'serverTimestamp', valor: 'REQUEST_TIME (sin resolver)' };
+    }
+    if (Array.isArray(valor)) return { tipo: 'list', valor: valor.map(tipar) };
+    if (typeof valor === 'object') return {
+      tipo: 'map', valor: Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, tipar(v)])),
+    };
+    return { tipo: typeof valor, valor };
+  };
+  const registrar = (operacion, referencia, datos, opciones) => {
+    if (opciones || Object.keys(datos).some((clave) => clave.includes('.'))) {
+      throw new Error('[VENTA DEBUG] Escritura no soportada por captura; transacción abortada');
+    }
+    escrituras.push({ operacion, referencia, datos });
+    return transaction;
+  };
+  const transaction = {
+    async get(ref) {
+      const snapshot = await original.get(ref);
+      anteriores.set(ref.path, snapshot.exists() ? snapshot.data() : undefined);
+      return snapshot;
+    },
+    set: (ref, datos, opciones) => registrar('set', ref, datos, opciones),
+    update: (ref, datos) => registrar('update', ref, datos),
+  };
+  return {
+    transaction,
+    async abortar() {
+      // No se encoló ninguna escritura real. Estas lecturas verifican destinos de set.
+      for (const { referencia } of escrituras) {
+        if (!anteriores.has(referencia.path)) await transaction.get(referencia);
+      }
+      console.info('[VENTA DEBUG] INICIO CAPTURA - SIN ESCRITURAS REALES');
+      const estados = new Map(anteriores);
+      const conteos = { VENTA: 0, DETALLE: 0, PRODUCTO: 0, STOCK: 0, ESTADISTICAS: 0 };
+      for (const { operacion, referencia, datos } of escrituras) {
+        const ruta = referencia.path;
+        const [coleccion, id] = ruta.split('/');
+        const grupo = coleccion === 'contadores' ? id : coleccion;
+        const bloque = ({ ventas: 'VENTA', detalleVentas: 'DETALLE', productos: 'PRODUCTO',
+          stock: 'STOCK', detalleStock: 'STOCK', canalesVentas: 'ESTADISTICAS' })[grupo] || grupo;
+        const anterior = estados.get(ruta);
+        const resultante = operacion === 'set' ? datos : { ...anterior, ...datos };
+        conteos[bloque] = (conteos[bloque] || 0) + 1;
+        console.info(`[VENTA DEBUG] bloque=${bloque}\n${JSON.stringify({
+          ruta, operacion, documentoExistia: anteriores.get(ruta) !== undefined,
+          anterior: tipar(anterior), resultante: tipar(resultante), camposEnviados: Object.keys(datos),
+        }, null, 2)}`);
+        estados.set(ruta, resultante);
+      }
+      console.info(`[VENTA DEBUG] RESUMEN ${JSON.stringify(conteos)}`);
+      const error = new Error('[VENTA DEBUG] CAPTURA COMPLETA - TRANSACCION ABORTADA INTENCIONALMENTE');
+      error.code = 'venta-debug-captura-abortada';
+      throw error;
+    },
+  };
+};
+// FIN DEBUG TEMPORAL VENTA.
 const valoresIguales = (anterior, siguiente) => {
   if (anterior === siguiente) return true;
   if (anterior?.isEqual && siguiente?.isEqual) {
@@ -555,7 +624,12 @@ export async function guardarOperacionNucleo({
     );
   }
 
-  return runTransaction(db, async (transaction) => {
+  return runTransaction(db, async (transactionOriginal) => {
+    // DEBUG TEMPORAL VENTA: solo creación de ventas, sin commit.
+    const capturaVenta = DEBUG_TRANSACCION === 'CAPTURAR_SIN_GUARDAR' && !esCompra && !idElemento
+      ? crearCapturaVenta(transactionOriginal)
+      : null;
+    const transaction = capturaVenta?.transaction || transactionOriginal;
     const contadorPrincipalRef = idElemento
       ? null
       : doc(db, "contadores", coleccion);
@@ -1028,6 +1102,8 @@ export async function guardarOperacionNucleo({
         huellaNueva,
       });
     }
+
+    if (capturaVenta) await capturaVenta.abortar(); // DEBUG TEMPORAL VENTA
 
     return operacionId;
   });

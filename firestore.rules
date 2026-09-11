@@ -239,19 +239,21 @@ service cloud.firestore {
     }
 
     function validOperationProductEdition(entry, field) {
-      return entry is map &&
-        entry.keys().hasAll([
-          'fecha', 'usuario', 'campo', 'valorAnterior', 'valorNuevo'
-        ]) &&
-        entry.keys().hasOnly([
-          'fecha', 'usuario', 'campo', 'valorAnterior', 'valorNuevo'
-        ]) &&
-        entry.fecha is timestamp &&
-        entry.usuario == accesoActual().usuarioId &&
-        entry.campo == field &&
-        entry.valorAnterior == resource.data.get(field, null) &&
-        entry.valorNuevo == request.resource.data[field];
-    }
+  let previousValue = resource.data.get(field, null);
+
+  return entry is map &&
+    entry.keys().hasAll([
+      'fecha', 'usuario', 'campo', 'valorAnterior', 'valorNuevo'
+    ]) &&
+    entry.keys().hasOnly([
+      'fecha', 'usuario', 'campo', 'valorAnterior', 'valorNuevo'
+    ]) &&
+    entry.fecha is timestamp &&
+    entry.usuario == accesoActual().usuarioId &&
+    entry.campo == field &&
+    entry.valorAnterior == previousValue &&
+    entry.valorNuevo == request.resource.data[field];
+}
 
     function validOperationProductEditions(valueField, currencyField) {
       let valueChanged = productFieldChanged(valueField);
