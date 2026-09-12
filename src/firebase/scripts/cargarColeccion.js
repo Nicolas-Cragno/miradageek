@@ -2,8 +2,9 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { doc, setDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, serverTimestamp, runTransaction } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
+import { prepararProductoNuevo } from "../../functions/productos/esquemaProducto.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,10 +28,21 @@ try {
   );
 
   for (const elemento of datos) {
-    if (elemento.id) {
-      await setDoc(doc(db, nombreColeccion, elemento.id), { ...elemento, fecha: serverTimestamp() });
+    const documento = nombreColeccion === "productos"
+      ? prepararProductoNuevo(elemento)
+      : { ...elemento, fecha: serverTimestamp() };
+    if (nombreColeccion === "productos") {
+      const referencia = elemento.id ? doc(db, nombreColeccion, elemento.id) : doc(collection(db, nombreColeccion));
+      await runTransaction(db, async transaction => {
+        if ((await transaction.get(referencia)).exists()) {
+          throw new Error(`El producto ${referencia.id} ya existe; el alta no reemplaza documentos.`);
+        }
+        transaction.set(referencia, documento);
+      });
+    } else if (elemento.id) {
+      await setDoc(doc(db, nombreColeccion, elemento.id), documento);
     } else {
-      await addDoc(collection(db, nombreColeccion), { ...elemento, fecha: serverTimestamp() });
+      await addDoc(collection(db, nombreColeccion), documento);
     }
 
     console.log(`✔ ${elemento.id ?? "(id automático)"}`);

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { defaultsProducto } from "../../src/functions/productos/esquemaProducto.js";
 import fs from "node:fs";
 import process from "node:process";
 import test, { after, before, beforeEach } from "node:test";
@@ -956,8 +957,30 @@ test("rechaza auditoría de operación atribuida a otro usuario", async () => {
 test("CREATE de producto moderno conserva validación estricta", async () => {
   await assert.doesNotReject(setDoc(
     doc(contextoGestor(), "productos", "PR-CREATE-MODERNO"),
-    productoModerno,
+    { ...defaultsProducto(), ...productoModerno, reservado: 0, pendiente: 0, ediciones: [] },
   ));
+});
+
+test("CREATE admite los 13 campos con comerciales null", async () => {
+  await assert.doesNotReject(setDoc(doc(contextoGestor(), "productos", "PR-NULL"), defaultsProducto()));
+});
+
+test("CREATE rechaza cada campo requerido ausente", async () => {
+  for (const campo of Object.keys(defaultsProducto())) {
+    const datos = defaultsProducto();
+    delete datos[campo];
+    await assert.rejects(setDoc(doc(contextoGestor(), "productos", `PR-SIN-${campo}`), datos));
+  }
+});
+
+test("CREATE rechaza tipos invalidos y obligaciones iniciales", async () => {
+  for (const [campo, valor] of [['monedaCosto', 'EUR'], ['precio', '10'],
+    ['stock', null], ['stockSucursal', null], ['reservado', 1], ['pendiente', 1],
+    ['ediciones', [{}]], ['fecha', 'hoy'], ['descripcion', 123]]) {
+    await assert.rejects(setDoc(doc(contextoGestor(), "productos", `PR-MAL-${campo}`), {
+      ...defaultsProducto(), [campo]: valor,
+    }));
+  }
 });
 
 test("CREATE de producto legacy sin monedas es rechazado", async () => {

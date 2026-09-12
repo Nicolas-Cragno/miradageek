@@ -30,14 +30,14 @@ if (import.meta.env?.DEV && typeof window !== 'undefined') {
             if (!campos.length) return [];
             const update = Object.fromEntries(campos.map(campo => [campo, cambios[campo].nuevo]));
             transaction.update(producto.ref, update);
-            return campos;
+            return campos.map(campo => campo + (cambios[campo].anterior === 'pesos' ? 'PesosAARS' : 'Agregado'));
           });
           // Contar solo después del commit; el callback puede reintentarse.
           if (!camposActualizados.length) resultado.sinCambios++;
           else {
             resultado.actualizados++;
-            for (const campo of camposActualizados) {
-              resultado[campo + (campo.startsWith('moneda') ? 'PesosAARS' : 'Agregado')]++;
+            for (const contador of camposActualizados) {
+              resultado[contador] = (resultado[contador] || 0) + 1;
             }
           }
         } catch (error) {

@@ -188,6 +188,24 @@ service cloud.firestore {
         validOptionalNumber('cuit', 0, 999999999999) && validTimestamp('fecha');
     }
 
+    function validNullableProductText(field, limit) {
+      return request.resource.data.get(field, null) == null || validText(field, limit);
+    }
+
+    function productSchemaFields() {
+      return ['descripcion', 'tipo', 'marca', 'costo', 'monedaCosto', 'precio',
+        'monedaPrecio', 'stock', 'stockSucursal', 'reservado', 'pendiente', 'fecha', 'ediciones'];
+    }
+
+    function validNewProduct() {
+      return request.resource.data.keys().hasAll(productSchemaFields()) && validProduct() &&
+        request.resource.data.stock is number &&
+        request.resource.data.reservado == 0 && request.resource.data.reservado is number &&
+        request.resource.data.pendiente == 0 && request.resource.data.pendiente is number &&
+        request.resource.data.ediciones == [] &&
+        (request.resource.data.stock != 0 || request.resource.data.stockSucursal == []);
+    }
+
     function validProduct() {
       return request.resource.data.keys().hasAll([
           'descripcion', 'monedaCosto', 'monedaPrecio'
@@ -197,12 +215,11 @@ service cloud.firestore {
           'monedaCosto', 'monedaPrecio', 'imagen', 'fecha', 'pendiente',
           'reservado', 'stockSucursal', 'ediciones'
         ]) &&
-        validText('id', 80) && validText('descripcion', 500) && validText('marca', 160) &&
-        validText('tipo', 40) && validText('monedaCosto', 20) &&
-        validText('monedaPrecio', 20) && validText('imagen', 2000) &&
-        (!('monedaCosto' in request.resource.data) ||
+        validText('id', 80) && validNullableProductText('descripcion', 500) && validNullableProductText('marca', 160) &&
+        validNullableProductText('tipo', 40) && validText('imagen', 2000) &&
+        (request.resource.data.get('monedaCosto', null) == null ||
           request.resource.data.monedaCosto in ['ARS', 'USD']) &&
-        (!('monedaPrecio' in request.resource.data) ||
+        (request.resource.data.get('monedaPrecio', null) == null ||
           request.resource.data.monedaPrecio in ['ARS', 'USD']) &&
         validOptionalNumber('stock', -999999999, 999999999) &&
         validOptionalNumber('pendiente', 0, 999999999) &&
@@ -213,7 +230,7 @@ service cloud.firestore {
         (!('ediciones' in request.resource.data) ||
           (request.resource.data.ediciones is list &&
            request.resource.data.ediciones.size() <= 1000)) &&
-        validTimestamp('fecha');
+        (request.resource.data.get('fecha', null) == null || validTimestamp('fecha'));
     }
 
     function productFieldChanged(field) {
@@ -631,11 +648,12 @@ service cloud.firestore {
 
     match /productos/{documentId} {
       allow read: if usuarioActivo();
-      allow create: if puedeGestionarOperaciones() && validProduct() &&
+      allow create: if puedeGestionarOperaciones() && validNewProduct() &&
         validOptionalNumber('costo', 0, 999999999999) &&
         validOptionalNumber('precio', 0, 999999999999) &&
         (!('id' in request.resource.data) || request.resource.data.id == documentId);
       allow update: if puedeGestionarOperaciones() &&
+        !request.resource.data.diff(resource.data).removedKeys().hasAny(productSchemaFields()) &&
         (validModernProductUpdate() ||
          validStockProductUpdate() ||
          validCommercialProductUpdate() ||

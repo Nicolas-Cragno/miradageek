@@ -1,4 +1,5 @@
 import { db } from "../../firebase/firebaseConfig";
+import { prepararProductoNuevo } from "../productos/esquemaProducto.js";
 import {
   doc,
   runTransaction,
@@ -86,14 +87,8 @@ export async function guardarOperacion({
     });
   }
 
-  if (collectionName === "productos" && !idElemento) {
-    if (
-      !["ARS", "USD"].includes(data.monedaCosto) ||
-      !["ARS", "USD"].includes(data.monedaPrecio)
-    ) {
-      throw new Error("Seleccioná ARS o USD para la moneda del costo y del precio.");
-    }
-  }
+  const productoNuevo = collectionName === "productos" && !idElemento
+    ? prepararProductoNuevo(data) : null;
 
   return runTransaction(db, async (transaction) => {
     const mainCounterRef = idElemento
@@ -143,23 +138,16 @@ export async function guardarOperacion({
         1,
       );
       [operationId] = allocation.codes;
+      if (productoNuevo && (await transaction.get(doc(db, "productos", operationId))).exists()) {
+        throw new Error(`El producto ${operationId} ya existe; revisa el contador de productos.`);
+      }
       transaction.update(mainCounterRef, allocation.nextCounter);
     }
 
     const operationRef = doc(db, collectionName, operationId);
     const datosGuardado =
       collectionName === "productos" && !idElemento
-        ? {
-            ...data,
-            stock: 0,
-            pendiente: 0,
-            reservado: 0,
-            ediciones: [],
-            stockSucursal: sucursalesDisponibles.map((sucursal) => ({
-              sucursal,
-              stock: 0,
-            })),
-          }
+        ? productoNuevo
         : data;
     if (idElemento) transaction.update(operationRef, datosGuardado);
     else transaction.set(operationRef, datosGuardado);
